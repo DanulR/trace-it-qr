@@ -104,29 +104,24 @@ initDB();
 
 
 export async function createQRCode(data: Partial<QRCodeData>) {
+  // Sanitize data for LibSQL (it doesn't like undefined, needs null)
+  const safeData: any = {};
+  for (const key in data) {
+    const val = (data as any)[key];
+    safeData[key] = val === undefined ? null : val;
+  }
+
+  // Use :param syntax which is standard for both LibSQL and Better-SQLite3
   const query = `
     INSERT INTO qr_codes (id, type, title, destination_url, landing_content, folder, custom_domain, organization, content_category, verification_hash)
     VALUES (:id, :type, :title, :destination_url, :landing_content, :folder, :custom_domain, :organization, :content_category, :verification_hash)
   `;
 
-  // Better-sqlite3 uses @, LibSQL uses : or @. Let's use : for compatibility if we switch, 
-  // but actually better-sqlite3 supports @, $, :. 
-  // Let's stick to the object keys matching the parameters.
-
-  // We need to ensure data keys match the query params.
-  // If we use @id in query, data must have key 'id'.
-
-  // Let's update the query to use @ which works for both (usually)
-  const queryCompatible = `
-    INSERT INTO qr_codes (id, type, title, destination_url, landing_content, folder, custom_domain, organization, content_category, verification_hash)
-    VALUES (@id, @type, @title, @destination_url, @landing_content, @folder, @custom_domain, @organization, @content_category, @verification_hash)
-  `;
-
   if (useTurso) {
-    return await db.execute({ sql: queryCompatible, args: data });
+    return await db.execute({ sql: query, args: safeData });
   } else {
-    const stmt = db.prepare(queryCompatible);
-    return stmt.run(data);
+    const stmt = db.prepare(query);
+    return stmt.run(safeData);
   }
 }
 
