@@ -90,7 +90,7 @@ const initQuery = `
 export async function initDB() {
   if (useTurso) {
     try {
-      await db.execute(initQuery);
+      await db.execute({ sql: initQuery, args: [] });
     } catch (err) {
       console.error("Failed to init Turso DB", err);
     }
