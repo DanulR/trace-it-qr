@@ -109,38 +109,40 @@ initDB();
 
 
 export async function createQRCode(data: Partial<QRCodeData>) {
-  // Use positional parameters to be 100% safe with types
+  // Manual escaping helper to bypass parameter binding issues entirely
+  const escape = (val: string | null | undefined) => {
+    if (val === null || val === undefined) return 'NULL';
+    // Replace single quotes with two single quotes
+    return `'${String(val).replace(/'/g, "''")}'`;
+  };
+
+  const idVal = escape(data.id);
+  const typeVal = escape(data.type || 'link');
+  const titleVal = escape(data.title);
+  const destVal = escape(data.destination_url);
+  const landingVal = escape(data.landing_content);
+  const folderVal = escape(data.folder || 'General');
+  const domainVal = escape(data.custom_domain);
+  const orgVal = escape(data.organization);
+  const catVal = escape(data.content_category);
+  const hashVal = escape(data.verification_hash);
+
   const query = `
     INSERT INTO qr_codes (id, type, title, destination_url, landing_content, folder, custom_domain, organization, content_category, verification_hash)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (${idVal}, ${typeVal}, ${titleVal}, ${destVal}, ${landingVal}, ${folderVal}, ${domainVal}, ${orgVal}, ${catVal}, ${hashVal})
   `;
 
-  const args = [
-    data.id || '',  // Required, use empty string  
-    data.type || 'link',  // Required with default
-    data.title || '',  // Required, use empty string
-    data.destination_url || null,  // Optional, use null
-    data.landing_content || null,  // Optional, use null
-    data.folder || 'General',  // Required with default
-    data.custom_domain || null,  // Optional, use null
-    data.organization || null,  // Optional, use null
-    data.content_category || null,  // Optional, use null
-    data.verification_hash || null  // Optional, use null
-  ];
-
   if (useTurso) {
-    console.log('[DB] About to execute with args:', JSON.stringify(args));
-    console.log('[DB] Args types:', args.map((a, i) => `${i}:${typeof a}`).join(', '));
+    console.log('[DB] Executing inlined query');
     try {
-      return await db.execute({ sql: query, args });
+      return await db.execute(query);
     } catch (e: any) {
-      console.error("Turso Execute Error Args:", JSON.stringify(args));
-      throw new Error(`Turso Error: ${e.message} | Args: ${JSON.stringify(args)}`);
+      console.error("Turso Execute Error:", e.message);
+      throw new Error(`Turso Error: ${e.message}`);
     }
   } else {
-    // For better-sqlite3 with positional args, we use run(...args)
-    const stmt = db.prepare(query);
-    return stmt.run(...args);
+    // Local dev fallback
+    return db.prepare(query).run();
   }
 }
 
