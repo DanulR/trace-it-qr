@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createQRCode, getAllQRCodes } from '@/lib/db';
+import { createQRCode, getAllQRCodes, initDB } from '@/lib/db';
 import { nanoid } from 'nanoid';
 import crypto from 'crypto';
 
 export async function POST(request: Request) {
     try {
+        await initDB(); // Ensure DB is ready
         const body = await request.json();
         const {
             type,
@@ -50,14 +51,15 @@ export async function POST(request: Request) {
         const shortUrl = `${protocol}://${host}/${id}`;
 
         return NextResponse.json({ id, shortUrl, verification_hash });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Create QR error:', error);
-        return NextResponse.json({ error: 'Failed to create QR code' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to create QR code', details: error.message }, { status: 500 });
     }
 }
 
 export async function GET() {
     try {
+        await initDB();
         const qrCodes = await getAllQRCodes();
         return NextResponse.json(qrCodes);
     } catch (error) {

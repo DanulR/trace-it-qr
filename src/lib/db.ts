@@ -87,13 +87,20 @@ const initQuery = `
   )
 `;
 
-if (useTurso) {
-  // We can't await at top level easily in CommonJS/ESM mix without top-level await support
-  // But Next.js supports it.
-  db.execute(initQuery).catch((err: any) => console.error("Failed to init Turso DB", err));
-} else {
-  db.exec(initQuery);
+export async function initDB() {
+  if (useTurso) {
+    try {
+      await db.execute(initQuery);
+    } catch (err) {
+      console.error("Failed to init Turso DB", err);
+    }
+  } else {
+    db.exec(initQuery);
+  }
 }
+
+// Call init on load, but we also export it to await it in API routes
+initDB();
 
 
 export async function createQRCode(data: Partial<QRCodeData>) {
