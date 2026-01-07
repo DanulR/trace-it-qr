@@ -111,16 +111,16 @@ export async function createQRCode(data: Partial<QRCodeData>) {
   `;
 
   const args = [
-    String(data.id || ''),
-    String(data.type || 'link'),
-    data.title ? String(data.title) : null,
-    data.destination_url ? String(data.destination_url) : null,
-    data.landing_content ? String(data.landing_content) : null,
-    String(data.folder || 'General'),
-    data.custom_domain ? String(data.custom_domain) : null,
-    data.organization ? String(data.organization) : null,
-    data.content_category ? String(data.content_category) : null,
-    data.verification_hash ? String(data.verification_hash) : null
+    data.id || '',  // Required, use empty string  
+    data.type || 'link',  // Required with default
+    data.title || '',  // Required, use empty string
+    data.destination_url || null,  // Optional, use null
+    data.landing_content || null,  // Optional, use null
+    data.folder || 'General',  // Required with default
+    data.custom_domain || null,  // Optional, use null
+    data.organization || null,  // Optional, use null
+    data.content_category || null,  // Optional, use null
+    data.verification_hash || null  // Optional, use null
   ];
 
   if (useTurso) {
