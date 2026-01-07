@@ -124,7 +124,12 @@ export async function createQRCode(data: Partial<QRCodeData>) {
   ];
 
   if (useTurso) {
-    return await db.execute({ sql: query, args });
+    try {
+      return await db.execute({ sql: query, args });
+    } catch (e: any) {
+      console.error("Turso Execute Error Args:", JSON.stringify(args));
+      throw new Error(`Turso Error: ${e.message} | Args: ${JSON.stringify(args)}`);
+    }
   } else {
     // For better-sqlite3 with positional args, we use run(...args)
     const stmt = db.prepare(query);
