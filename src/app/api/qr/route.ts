@@ -5,8 +5,13 @@ import crypto from 'crypto';
 
 export async function POST(request: Request) {
     try {
+        console.log('[API] Starting POST /api/qr');
         await initDB(); // Ensure DB is ready
+        console.log('[API] DB initialized');
+
         const body = await request.json();
+        console.log('[API] Request body parsed:', JSON.stringify(body));
+
         const {
             type,
             title,
@@ -23,12 +28,15 @@ export async function POST(request: Request) {
         }
 
         const id = nanoid(6);
+        console.log('[API] Generated ID:', id);
 
         // Generate a mock verification hash for "Verified Content"
         let verification_hash = undefined;
         if (type === 'verified_content') {
             verification_hash = crypto.createHash('sha256').update(id + title + new Date().toISOString()).digest('hex').substring(0, 16);
         }
+
+        console.log('[API] About to call createQRCode with:', { id, type, title });
 
         await createQRCode({
             id,
@@ -42,6 +50,8 @@ export async function POST(request: Request) {
             content_category,
             verification_hash
         });
+
+        console.log('[API] QR Code created successfully');
 
         const host = request.headers.get('host') || 'localhost:3000';
         const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
