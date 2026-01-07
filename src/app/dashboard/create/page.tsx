@@ -80,12 +80,14 @@ export default function CreateQR() {
 
             if (res.ok) {
                 router.push('/dashboard');
+                router.refresh(); // Ensure the dashboard updates
             } else {
-                alert('Failed to create QR code');
+                const data = await res.json();
+                alert(`Error: ${data.details || data.error || 'Failed to create QR code'}`);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            alert('Error creating QR code');
+            alert('Something went wrong: ' + err.message);
         } finally {
             setLoading(false);
         }
