@@ -124,6 +124,8 @@ export async function createQRCode(data: Partial<QRCodeData>) {
   ];
 
   if (useTurso) {
+    console.log('[DB] About to execute with args:', JSON.stringify(args));
+    console.log('[DB] Args types:', args.map((a, i) => `${i}:${typeof a}`).join(', '));
     try {
       return await db.execute({ sql: query, args });
     } catch (e: any) {
