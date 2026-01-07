@@ -104,24 +104,31 @@ initDB();
 
 
 export async function createQRCode(data: Partial<QRCodeData>) {
-  // Sanitize data for LibSQL (it doesn't like undefined, needs null)
-  const safeData: any = {};
-  for (const key in data) {
-    const val = (data as any)[key];
-    safeData[key] = val === undefined ? null : val;
-  }
-
-  // Use :param syntax which is standard for both LibSQL and Better-SQLite3
+  // Use positional parameters to be 100% safe with types
   const query = `
     INSERT INTO qr_codes (id, type, title, destination_url, landing_content, folder, custom_domain, organization, content_category, verification_hash)
-    VALUES (:id, :type, :title, :destination_url, :landing_content, :folder, :custom_domain, :organization, :content_category, :verification_hash)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
+  const args = [
+    data.id || null,
+    data.type || 'link',
+    data.title || null,
+    data.destination_url || null,
+    data.landing_content || null,
+    data.folder || 'General',
+    data.custom_domain || null,
+    data.organization || null,
+    data.content_category || null,
+    data.verification_hash || null
+  ];
+
   if (useTurso) {
-    return await db.execute({ sql: query, args: safeData });
+    return await db.execute({ sql: query, args });
   } else {
+    // For better-sqlite3 with positional args, we use run(...args)
     const stmt = db.prepare(query);
-    return stmt.run(safeData);
+    return stmt.run(...args);
   }
 }
 
