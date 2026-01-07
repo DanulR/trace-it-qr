@@ -1,21 +1,26 @@
 import { createClient } from '@libsql/client';
-import Database from 'better-sqlite3';
 import path from 'path';
 
-// Check if we are in a cloud environment (Vercel) or have Turso credentials
-const useTurso = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
+// Check if we are in production with Turso
+const useTurso = !!(process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN);
 
 let db: any;
 
 if (useTurso) {
+  // Production: Use Turso
   db = createClient({
     url: process.env.TURSO_DATABASE_URL!,
     authToken: process.env.TURSO_AUTH_TOKEN!,
   });
 } else {
-  // Fallback to local SQLite for development if no Turso creds
-  const dbPath = path.join(process.cwd(), 'urls.db');
-  db = new Database(dbPath);
+  // Development: Lazy load better-sqlite3 to avoid deployment issues
+  try {
+    const Database = require('better-sqlite3');
+    const dbPath = path.join(process.cwd(), 'urls.db');
+    db = new Database(dbPath);
+  } catch (e) {
+    console.warn('better-sqlite3 not available, some features may not work in dev');
+  }
 }
 
 export default db;
