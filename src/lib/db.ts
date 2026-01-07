@@ -135,7 +135,7 @@ export async function createQRCode(data: Partial<QRCodeData>) {
   if (useTurso) {
     console.log('[DB] Executing inlined query');
     try {
-      return await db.execute(query);
+      return await db.execute({ sql: query, args: [] });
     } catch (e: any) {
       console.error("Turso Execute Error:", e.message);
       throw new Error(`Turso Error: ${e.message}`);
