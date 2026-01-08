@@ -1,5 +1,6 @@
-import { getQRCode, incrementScan } from '@/lib/db';
-import { redirect, notFound } from 'next/navigation';
+import ScanTracker from '@/components/ScanTracker';
+import { getQRCode } from '@/lib/db';
+import { notFound } from 'next/navigation';
 import { Globe, Link as LinkIcon, Mail, Phone, Facebook, Twitter, Instagram, Linkedin, ShieldCheck, CheckCircle } from 'lucide-react';
 
 // Force dynamic rendering since we rely on DB data that changes
@@ -17,12 +18,9 @@ export default async function PublicQRPage({
         notFound();
     }
 
-    // Increment scan count
-    await incrementScan(id);
-
-    // Handle Redirect
-    if (qrData.type === 'link' && qrData.destination_url) {
-        redirect(qrData.destination_url);
+    // Client-side tracking & redirect
+    if (qrData.type === 'link') {
+        return <ScanTracker id={id} type="link" destinationUrl={qrData.destination_url} />;
     }
 
     // Handle Verified Content Page
@@ -37,6 +35,7 @@ export default async function PublicQRPage({
                 alignItems: 'center',
                 fontFamily: 'sans-serif'
             }}>
+                <ScanTracker id={id} type="verified_content" />
                 {/* Verification Header */}
                 <div style={{
                     width: '100%',
@@ -185,6 +184,7 @@ export default async function PublicQRPage({
                 padding: '2rem',
                 fontFamily: 'sans-serif'
             }}>
+                <ScanTracker id={id} type="landing" />
                 {/* Header / Profile */}
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     {content.image && (
