@@ -199,7 +199,7 @@ export default function Dashboard() {
     };
 
     const getUrl = (qr: QRCodeItem) => {
-        if (qr.custom_domain) return `https://${qr.custom_domain}.trace-it.io`;
+        if (qr.custom_domain) return `https://${qr.custom_domain}.trace-it.io/${qr.id}`;
         // Fallback or standard short URL
         return `${window.location.origin}/${qr.id}`;
     };

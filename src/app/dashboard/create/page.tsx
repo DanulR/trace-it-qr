@@ -61,9 +61,8 @@ export default function CreateQR() {
 
     // Determine preview value
     const getPreviewValue = () => {
-        if (destinationUrl) return destinationUrl;
-        if (customDomain) return `https://${customDomain}.trace-it.io`;
-        return 'https://trace-it.io'; // Fallback
+        const base = customDomain ? `https://${customDomain}.trace-it.io` : typeof window !== 'undefined' ? window.location.origin : 'https://trace-it.io';
+        return `${base}/preview-qr-id`;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
