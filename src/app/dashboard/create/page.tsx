@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Link as LinkIcon, FileText, ShieldCheck, Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import styles from './create.module.css';
+import { QRCodePreview, QRStyle } from '@/components/QRCodePreview';
 
 type LinkItem = {
     title: string;
@@ -50,6 +51,21 @@ export default function CreateQR() {
         setLandingLinks(newLinks);
     };
 
+    const [qrStyle, setQrStyle] = useState<QRStyle>({
+        fgColor: '#000000',
+        bgColor: '#ffffff',
+        logoImage: '/logo-placeholder.png', // Or empty string, user can paste URL
+        eyeRadius: [0, 0, 0, 0], // Square by default
+        labelText: '',
+    });
+
+    // Determine preview value
+    const getPreviewValue = () => {
+        if (destinationUrl) return destinationUrl;
+        if (customDomain) return `https://${customDomain}.trace-it.io`;
+        return 'https://trace-it.io'; // Fallback
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -68,7 +84,8 @@ export default function CreateQR() {
                 image: landingImage,
                 links: landingLinks,
                 theme: { background: themeColor }
-            } : undefined
+            } : undefined,
+            style: qrStyle
         };
 
         try {
@@ -123,154 +140,179 @@ export default function CreateQR() {
                 </button>
             </div>
 
-            <form onSubmit={handleSubmit} className={styles.form}>
-                <div className={styles.section}>
-                    <label>Internal Name (for your dashboard)</label>
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="e.g. Q1 Financial Report"
-                        required
-                        className={styles.input}
-                    />
-                </div>
-
-                {mode === 'verified_content' && (
-                    <div className={styles.landingForm}>
+            <div className={styles.contentWrapper}>
+                <div className={styles.formColumn}>
+                    <form onSubmit={handleSubmit} className={styles.form}>
+                        {/* Basic Info */}
                         <div className={styles.section}>
-                            <label>Organization Name</label>
+                            <label>Internal Name (for your dashboard)</label>
                             <input
                                 type="text"
-                                value={organization}
-                                onChange={(e) => setOrganization(e.target.value)}
-                                placeholder="e.g. Verité Research"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder="e.g. Q1 Financial Report"
                                 required
                                 className={styles.input}
                             />
                         </div>
-                        <div className={styles.section}>
-                            <label>Content Category</label>
-                            <select
-                                value={contentCategory}
-                                onChange={(e) => setContentCategory(e.target.value)}
-                                className={styles.select}
-                            >
-                                <option value="Official Statement">Official Statement</option>
-                                <option value="Fact Check">Fact Check</option>
-                                <option value="Research Report">Research Report</option>
-                                <option value="Press Release">Press Release</option>
-                            </select>
-                        </div>
-                        <div className={styles.section}>
-                            <label>Source URL (The content to verify)</label>
-                            <input
-                                type="url"
-                                value={destinationUrl}
-                                onChange={(e) => setDestinationUrl(e.target.value)}
-                                placeholder="https://..."
-                                required
-                                className={styles.input}
-                            />
-                        </div>
-                        <div className={styles.section}>
-                            <label>Custom Domain (Verification Source)</label>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <input
-                                    type="text"
-                                    value={customDomain}
-                                    onChange={(e) => setCustomDomain(e.target.value)}
-                                    placeholder="veriteresearch"
-                                    className={styles.input}
-                                    style={{ flex: 1 }}
-                                />
-                                <span style={{ color: '#94a3b8' }}>.trace-it.io</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
-                {mode === 'link' && (
-                    <div className={styles.section}>
-                        <label>Destination URL</label>
-                        <input
-                            type="url"
-                            value={destinationUrl}
-                            onChange={(e) => setDestinationUrl(e.target.value)}
-                            placeholder="https://example.com"
-                            required
-                            className={styles.input}
-                        />
-                    </div>
-                )}
-
-                {mode === 'landing' && (
-                    <div className={styles.landingForm}>
-                        {/* ... Landing page inputs (same as before) ... */}
-                        <div className={styles.section}>
-                            <label>Page Title</label>
-                            <input
-                                type="text"
-                                value={landingTitle}
-                                onChange={(e) => setLandingTitle(e.target.value)}
-                                placeholder="My Company"
-                                className={styles.input}
-                            />
-                        </div>
-                        <div className={styles.section}>
-                            <label>Description</label>
-                            <textarea
-                                value={landingDesc}
-                                onChange={(e) => setLandingDesc(e.target.value)}
-                                placeholder="Short bio or description..."
-                                className={styles.textarea}
-                            />
-                        </div>
-                        <div className={styles.section}>
-                            <label>Profile Image URL</label>
-                            <input
-                                type="url"
-                                value={landingImage}
-                                onChange={(e) => setLandingImage(e.target.value)}
-                                placeholder="https://..."
-                                className={styles.input}
-                            />
-                        </div>
-
-                        <div className={styles.linksSection}>
-                            <label>Links</label>
-                            {landingLinks.map((link, index) => (
-                                <div key={index} className={styles.linkRow}>
+                        {mode === 'verified_content' && (
+                            <div className={styles.landingForm}>
+                                <div className={styles.section}>
+                                    <label>Organization Name</label>
                                     <input
                                         type="text"
-                                        placeholder="Title"
-                                        value={link.title}
-                                        onChange={(e) => updateLink(index, 'title', e.target.value)}
+                                        value={organization}
+                                        onChange={(e) => setOrganization(e.target.value)}
+                                        placeholder="e.g. Verité Research"
+                                        required
                                         className={styles.input}
                                     />
+                                </div>
+                                <div className={styles.section}>
+                                    <label>Content Category</label>
+                                    <select
+                                        value={contentCategory}
+                                        onChange={(e) => setContentCategory(e.target.value)}
+                                        className={styles.select}
+                                    >
+                                        <option value="Official Statement">Official Statement</option>
+                                        <option value="Fact Check">Fact Check</option>
+                                        <option value="Research Report">Research Report</option>
+                                        <option value="Press Release">Press Release</option>
+                                    </select>
+                                </div>
+                                <div className={styles.section}>
+                                    <label>Source URL (The content to verify)</label>
                                     <input
                                         type="url"
-                                        placeholder="URL"
-                                        value={link.url}
-                                        onChange={(e) => updateLink(index, 'url', e.target.value)}
+                                        value={destinationUrl}
+                                        onChange={(e) => setDestinationUrl(e.target.value)}
+                                        placeholder="https://..."
+                                        required
                                         className={styles.input}
                                     />
-                                    <button type="button" onClick={() => removeLink(index)} className={styles.deleteBtn}>
-                                        <Trash2 size={18} />
+                                </div>
+                                <div className={styles.section}>
+                                    <label>Custom Domain (Verification Source)</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <input
+                                            type="text"
+                                            value={customDomain}
+                                            onChange={(e) => setCustomDomain(e.target.value)}
+                                            placeholder="veriteresearch"
+                                            className={styles.input}
+                                            style={{ flex: 1 }}
+                                        />
+                                        <span style={{ color: '#94a3b8' }}>.trace-it.io</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {mode === 'link' && (
+                            <div className={styles.section}>
+                                <label>Destination URL</label>
+                                <input
+                                    type="url"
+                                    value={destinationUrl}
+                                    onChange={(e) => setDestinationUrl(e.target.value)}
+                                    placeholder="https://example.com"
+                                    required
+                                    className={styles.input}
+                                />
+                            </div>
+                        )}
+
+                        {/* Design Customization */}
+                        <div className={styles.advancedSection}>
+                            <h3>Design Customization</h3>
+
+                            <div className={styles.colorSection}>
+                                <div className={styles.section}>
+                                    <label>Foreground Color</label>
+                                    <input
+                                        type="color"
+                                        className={styles.colorInput}
+                                        value={qrStyle.fgColor}
+                                        onChange={e => setQrStyle({ ...qrStyle, fgColor: e.target.value })}
+                                    />
+                                </div>
+                                <div className={styles.section}>
+                                    <label>Background Color</label>
+                                    <input
+                                        type="color"
+                                        className={styles.colorInput}
+                                        value={qrStyle.bgColor}
+                                        onChange={e => setQrStyle({ ...qrStyle, bgColor: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className={styles.section}>
+                                <label>Logo URL (Center Image)</label>
+                                <input
+                                    type="text"
+                                    value={qrStyle.logoImage}
+                                    onChange={(e) => setQrStyle({ ...qrStyle, logoImage: e.target.value })}
+                                    placeholder="https://..."
+                                    className={styles.input}
+                                />
+                            </div>
+
+                            <div className={styles.section}>
+                                <label>Label Text (Below QR)</label>
+                                <input
+                                    type="text"
+                                    value={qrStyle.labelText}
+                                    onChange={(e) => setQrStyle({ ...qrStyle, labelText: e.target.value })}
+                                    placeholder="e.g. Trace-it"
+                                    className={styles.input}
+                                />
+                            </div>
+
+                            <div className={styles.section}>
+                                <label>Corner Style</label>
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setQrStyle({ ...qrStyle, eyeRadius: [0, 0, 0, 0] })}
+                                        className={`${styles.tab} ${qrStyle.eyeRadius[0] === 0 ? styles.activeTab : ''}`}
+                                        style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                                    >
+                                        Square
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setQrStyle({ ...qrStyle, eyeRadius: [10, 10, 10, 10] })}
+                                        className={`${styles.tab} ${qrStyle.eyeRadius[0] > 0 ? styles.activeTab : ''}`}
+                                        style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                                    >
+                                        Rounded
                                     </button>
                                 </div>
-                            ))}
-                            <button type="button" onClick={addLink} className={styles.addBtn}>
-                                <Plus size={16} /> Add Link
-                            </button>
+                            </div>
                         </div>
-                    </div>
-                )}
 
-                <button type="submit" className={styles.submitBtn} disabled={loading}>
-                    <Save size={20} /> {loading ? 'Creating...' : 'Create QR Code'}
-                </button>
-            </form>
+                        <button type="submit" className={styles.submitBtn} disabled={loading}>
+                            <Save size={20} /> {loading ? 'Creating...' : 'Create QR Code'}
+                        </button>
+                    </form>
+                </div>
+
+                <div className={styles.previewColumn}>
+                    <div className={styles.previewCard}>
+                        <div className={styles.previewTitle}>Live Preview</div>
+                        <QRCodePreview
+                            value={getPreviewValue()}
+                            style={qrStyle}
+                        />
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', textAlign: 'center', marginTop: '1rem' }}>
+                            This is how your QR code will appear.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

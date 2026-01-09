@@ -36,6 +36,7 @@ export type QRCodeData = {
   organization?: string;
   content_category?: string;
   verification_hash?: string;
+  style?: string; // JSON string for customization
   created_at: string;
   scans: number;
 };
@@ -46,10 +47,6 @@ async function runQuery(query: string, args: any = []) {
     return await db.execute({ sql: query, args });
   } else {
     const stmt = db.prepare(query);
-    // better-sqlite3 uses named parameters like @id, but libsql uses ? or :id
-    // We need to standardize. For now, let's assume the input 'args' matches the query format.
-    // However, our previous code used @named params. LibSQL supports named params with : or @.
-    // Let's try to pass the object directly.
     return stmt.run(args);
   }
 }
@@ -87,6 +84,7 @@ const initQuery = `
     organization TEXT,
     content_category TEXT,
     verification_hash TEXT,
+    style TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     scans INTEGER DEFAULT 0
   )
@@ -96,11 +94,17 @@ export async function initDB() {
   if (useTurso) {
     try {
       await db.execute({ sql: initQuery, args: [] });
+      try {
+        await db.execute({ sql: 'ALTER TABLE qr_codes ADD COLUMN style TEXT', args: [] });
+      } catch (e) { /* ignore if exists */ }
     } catch (err) {
       console.error("Failed to init Turso DB", err);
     }
   } else {
     db.exec(initQuery);
+    try {
+      db.exec('ALTER TABLE qr_codes ADD COLUMN style TEXT');
+    } catch (e) { /* ignore if already exists */ }
   }
 }
 
@@ -126,10 +130,11 @@ export async function createQRCode(data: Partial<QRCodeData>) {
   const orgVal = escape(data.organization);
   const catVal = escape(data.content_category);
   const hashVal = escape(data.verification_hash);
+  const styleVal = escape(data.style);
 
   const query = `
-    INSERT INTO qr_codes (id, type, title, destination_url, landing_content, folder, custom_domain, organization, content_category, verification_hash)
-    VALUES (${idVal}, ${typeVal}, ${titleVal}, ${destVal}, ${landingVal}, ${folderVal}, ${domainVal}, ${orgVal}, ${catVal}, ${hashVal})
+    INSERT INTO qr_codes (id, type, title, destination_url, landing_content, folder, custom_domain, organization, content_category, verification_hash, style)
+    VALUES (${idVal}, ${typeVal}, ${titleVal}, ${destVal}, ${landingVal}, ${folderVal}, ${domainVal}, ${orgVal}, ${catVal}, ${hashVal}, ${styleVal})
   `;
 
   if (useTurso) {

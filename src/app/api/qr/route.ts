@@ -20,7 +20,8 @@ export async function POST(request: Request) {
             folder,
             custom_domain,
             organization,
-            content_category
+            content_category,
+            style
         } = body;
 
         if (!title) {
@@ -48,7 +49,8 @@ export async function POST(request: Request) {
             custom_domain,
             organization,
             content_category,
-            verification_hash
+            verification_hash,
+            style: style ? JSON.stringify(style) : undefined
         });
 
         console.log('[API] QR Code created successfully');
