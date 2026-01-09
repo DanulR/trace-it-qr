@@ -199,8 +199,8 @@ export default function Dashboard() {
     };
 
     const getUrl = (qr: QRCodeItem) => {
-        if (qr.custom_domain) return `https://${qr.custom_domain}.trace-it.io/${qr.id}`;
-        // Fallback or standard short URL
+        // Always return the standard app specific URL, regardless of "custom domain" field
+        // The custom_domain is internal metadata, not a DNS redirect
         return `${window.location.origin}/${qr.id}`;
     };
 
