@@ -16,10 +16,10 @@ import { QRCodePreview, QRStyle } from '@/components/QRCodePreview';
 
 // Duplicate basic types if needed or import
 export default function FolderViewPage({ params }: { params: Promise<{ name: string }> }) {
-    const [qrCodes, setQrCodes] = useState<QRCodeItem[]>([]);
+    const [qrCodes, setQrCodes] = useState<QRCodeData[]>([]);
     const [folders, setFolders] = useState<Folder[]>([]);
     const [loading, setLoading] = useState(true);
-    const [downloadItem, setDownloadItem] = useState<{ item: QRCodeItem, style: QRStyle } | null>(null);
+    const [downloadItem, setDownloadItem] = useState<{ item: QRCodeData, style: QRStyle } | null>(null);
     // State to hold the unwrapped param
     const [folderName, setFolderName] = useState<string>('');
     const router = useRouter();
@@ -35,7 +35,7 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
                 fetch('/api/qr').then(res => res.json()),
                 fetch('/api/folders').then(res => res.json())
             ]).then(([qrs, folderList]) => {
-                const filtered = qrs.filter((q: QRCodeItem) => q.folder === name);
+                const filtered = qrs.filter((q: QRCodeData) => q.folder === name);
                 setQrCodes(filtered);
                 setFolders(folderList);
                 setLoading(false);
@@ -161,7 +161,7 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
     }, [downloadItem]);
 
 
-    const prepareDownload = (item: QRCodeItem) => {
+    const prepareDownload = (item: QRCodeData) => {
         let style: QRStyle = {
             fgColor: '#000000',
             bgColor: '#ffffff',
@@ -175,9 +175,9 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
         setDownloadItem({ item, style });
     };
 
-    const getUrl = (qr: QRCodeItem) => `${window.location.origin}/${qr.id}`;
+    const getUrl = (qr: QRCodeData) => `${window.location.origin}/${qr.id}`;
 
-    const handleMove = async (qr: QRCodeItem, newFolder: string) => {
+    const handleMove = async (qr: QRCodeData, newFolder: string) => {
         try {
             const res = await fetch(`/api/qr/${qr.id}/folder`, {
                 method: 'PATCH',
