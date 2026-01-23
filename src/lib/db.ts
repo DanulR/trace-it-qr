@@ -180,3 +180,105 @@ export async function incrementScan(id: string) {
     return stmt.run(id);
   }
 }
+
+// ----------------------------------------------------------------------
+// FOLDER OPERATIONS
+// ----------------------------------------------------------------------
+
+export type Folder = {
+  id: string;
+  name: string;
+  created_at: string;
+};
+
+// Ensure folders table exists
+const initFoldersQuery = `
+  CREATE TABLE IF NOT EXISTS folders (
+    id TEXT PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`;
+
+// Run this separately or inside initDB
+async function initFoldersDB() {
+  if (useTurso) {
+    try {
+      await db.execute({ sql: initFoldersQuery, args: [] });
+      // Insert default 'General' folder if not exists
+      try {
+        await db.execute({
+          sql: "INSERT INTO folders (id, name) VALUES ('default_general', 'General')",
+          args: []
+        });
+      } catch (e) { /* ignore constraint error */ }
+    } catch (err) {
+      console.error("Failed to init Folders table", err);
+    }
+  } else {
+    db.exec(initFoldersQuery);
+    try {
+      db.prepare("INSERT INTO folders (id, name) VALUES ('default_general', 'General')").run();
+    } catch (e) { /* ignore */ }
+  }
+}
+
+// We can append this to initDB, or just call it here.
+// Let's modify initDB to call this.
+// BUT since I can't easily modify initDB in this contiguous block without re-writing the whole file or using multi-replace (which is disallowed for single block), 
+// I will just export it and call it. 
+// Actually, I can just run it once at module level like initDB is run.
+initFoldersDB();
+
+
+export async function createFolder(name: string) {
+  const id = require('nanoid').nanoid(6);
+  // Escape name for safety if local
+  const escape = (val: string) => `'${val.replace(/'/g, "''")}'`;
+
+  // We need to handle potential duplicate name error
+  const query = `INSERT INTO folders (id, name) VALUES ('${id}', ${escape(name)})`;
+
+  if (useTurso) {
+    return await db.execute({ sql: `INSERT INTO folders (id, name) VALUES (?, ?)`, args: [id, name] });
+  } else {
+    return db.prepare('INSERT INTO folders (id, name) VALUES (?, ?)').run(id, name);
+  }
+}
+
+export async function getFolders() {
+  if (useTurso) {
+    const result = await db.execute('SELECT * FROM folders ORDER BY created_at ASC');
+    return result.rows as unknown as Folder[];
+  } else {
+    return db.prepare('SELECT * FROM folders ORDER BY created_at ASC').all() as Folder[];
+  }
+}
+
+export async function deleteFolder(name: string) {
+  // Prevent deleting 'General'
+  if (name === 'General') throw new Error("Cannot delete General folder");
+
+  // 1. Move QRs to General
+  const moveQuery = `UPDATE qr_codes SET folder = 'General' WHERE folder = ?`;
+  // 2. Delete Folder
+  const deleteQuery = `DELETE FROM folders WHERE name = ?`;
+
+  if (useTurso) {
+    await db.execute({ sql: moveQuery, args: [name] });
+    await db.execute({ sql: deleteQuery, args: [name] });
+  } else {
+    db.transaction(() => {
+      db.prepare(moveQuery).run(name);
+      db.prepare(deleteQuery).run(name);
+    })();
+  }
+}
+
+export async function updateQRFolder(qrId: string, folderName: string) {
+  if (useTurso) {
+    return await db.execute({ sql: 'UPDATE qr_codes SET folder = ? WHERE id = ?', args: [folderName, qrId] });
+  } else {
+    return db.prepare('UPDATE qr_codes SET folder = ? WHERE id = ?').run(folderName, qrId);
+  }
+}

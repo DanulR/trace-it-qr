@@ -1,101 +1,98 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, ExternalLink, QrCode, BarChart2, Calendar, MoreVertical } from 'lucide-react';
-import styles from './page.module.css';
-import { QRCodePreview, QRStyle } from '@/components/QRCodePreview';
+import { ArrowLeft, QrCode } from 'lucide-react';
+import styles from './page.module.css'; // We'll create this or reuse dashboard styles
+// Actually, let's reuse dashboard styles or inline for now as it's simple
+// But to match the project structure I should create a module css.
+// I will reuse the grid layout from global globals or inline it to save a file for now, 
+// or better, I will duplicate the relevant parts of dashboard css.
+
 import { QRCodeCard } from '@/components/QRCodeCard';
 import { QRCodeData, Folder } from '@/lib/db';
+import { QRCodePreview, QRStyle } from '@/components/QRCodePreview';
 
-export default function Dashboard() {
-    const [qrCodes, setQrCodes] = useState<QRCodeData[]>([]);
+// Duplicate basic types if needed or import
+interface QRCodeItem extends QRCodeData {
+    // any extra fields?
+}
+
+export default function FolderViewPage({ params }: { params: { name: string } }) {
+    const [qrCodes, setQrCodes] = useState<QRCodeItem[]>([]);
     const [folders, setFolders] = useState<Folder[]>([]);
     const [loading, setLoading] = useState(true);
-    const [downloadItem, setDownloadItem] = useState<{ item: QRCodeData, style: QRStyle } | null>(null);
+    const [downloadItem, setDownloadItem] = useState<{ item: QRCodeItem, style: QRStyle } | null>(null);
+    const folderName = decodeURIComponent(params.name);
+    const router = useRouter();
 
     useEffect(() => {
+        // Fetch all QRs and filter client side (easier for now vs new API arg)
+        // Optimization: Create specific API later.
+        // Actually, db.ts doesn't have "getQRByFolder".
+        // I will just fetch all and filter.
         Promise.all([
             fetch('/api/qr').then(res => res.json()),
             fetch('/api/folders').then(res => res.json())
-        ]).then(([qrData, folderData]) => {
-            setQrCodes(qrData);
-            setFolders(folderData);
+        ]).then(([qrs, folderList]) => {
+            const filtered = qrs.filter((q: QRCodeItem) => q.folder === folderName);
+            setQrCodes(filtered);
+            setFolders(folderList);
             setLoading(false);
         }).catch(err => {
             console.error(err);
             setLoading(false);
         });
-    }, []);
+    }, [folderName]);
 
-    // Handle download effect
+    // Copy download logic from dashboard (unfortunately duplicated logic for now)
+    // TODO: move this logic to a hook or context
     useEffect(() => {
         if (!downloadItem) return;
-
-        // Wait for render (and potential image load)
         const timer = setTimeout(() => {
             const qrCanvas = document.getElementById('qr-download-canvas') as HTMLCanvasElement;
             if (qrCanvas) {
-                // Create a temporary canvas for composition
                 const finalCanvas = document.createElement('canvas');
                 const ctx = finalCanvas.getContext('2d');
-
                 if (ctx) {
-                    const padding = 100; // Increased padding to make QR look smaller relative to canvas
-                    const labelFontSize = 72; // Increased font size
-                    const labelMargin = 30;
+                    const padding = 100;
+                    const labelFontSize = 72;
+                    // ... (rest of the detailed canvas drawing logic) ...
+                    // For brevity in this thought process, I will simplify or try to extract it?
+                    // The user wants it "functional", not necessarily perfect clean code immediately.
+                    // Copy-paste is safe.
+                    // Actually, I should have extracted this fast logic.
+                    // I will replicate the exact logic to ensure consistency.
 
-                    // Box calculations based on new font size
                     const boxPaddingY = 32;
                     const labelBoxHeight = labelFontSize + (boxPaddingY * 2);
-
                     const brandColor = '#8B0000';
-                    const borderPadding = 20; // Space between QR and border
+                    const borderPadding = 20;
                     const borderRadius = 40;
                     const borderThickness = 12;
                     const spaceBetweenBorderAndLabel = 30;
 
-                    let styleObj: QRStyle;
-                    if (downloadItem.style) {
-                        // Should be object already if typed correctly but let's be safe
-                        styleObj = typeof downloadItem.style === 'string' ? JSON.parse(downloadItem.style) : downloadItem.style as any;
-                    } else {
-                        // Default dummy
-                        styleObj = { labelText: '', fgColor: '#000', bgColor: '#fff', eyeRadius: [0, 0, 0, 0], logoImage: '' };
-                    }
-
-
-                    const extraHeight = styleObj.labelText
-                        ? (qrCanvas.height + (borderPadding * 2) + spaceBetweenBorderAndLabel + labelBoxHeight) - (qrCanvas.height + (padding * 2))
-                        : 0;
-
                     const borderH = qrCanvas.height + (borderPadding * 2);
-                    const totalContentHeight = (padding - borderPadding) + borderH + spaceBetweenBorderAndLabel + labelBoxHeight + 40; // +40 margin bottom
+                    const totalContentHeight = (padding - borderPadding) + borderH + spaceBetweenBorderAndLabel + labelBoxHeight + 40;
 
                     finalCanvas.width = qrCanvas.width + (padding * 2);
-                    // Ensure canvas is tall enough. If label exists, use total height calculation
-                    finalCanvas.height = styleObj.labelText
+                    finalCanvas.height = downloadItem.style.labelText
                         ? Math.max(qrCanvas.height + (padding * 2), totalContentHeight)
                         : qrCanvas.height + (padding * 2);
 
-                    // 1. Fill white background
                     ctx.fillStyle = '#ffffff';
                     ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-
-                    // 2. Draw QR Code
                     ctx.drawImage(qrCanvas, padding, padding);
 
-                    // 3. Draw Border & Label if exists
-                    if (styleObj.labelText) {
-                        // Draw Rounded Border around QR
+                    if (downloadItem.style.labelText) {
                         ctx.strokeStyle = brandColor;
                         ctx.lineWidth = borderThickness;
-
                         const borderX = padding - borderPadding;
                         const borderY = padding - borderPadding;
-                        // Width is QR width + padding on both sides
                         const borderW = qrCanvas.width + (borderPadding * 2);
 
+                        // Rounded rect border (simplified path for speed if slightly different, but let's try to match)
                         ctx.beginPath();
                         ctx.moveTo(borderX + borderRadius, borderY);
                         ctx.lineTo(borderX + borderW - borderRadius, borderY);
@@ -109,24 +106,20 @@ export default function Dashboard() {
                         ctx.closePath();
                         ctx.stroke();
 
-                        // Label Calculations
+                        // Label Bubble
                         const centerX = finalCanvas.width / 2;
                         const labelY = borderY + borderH + spaceBetweenBorderAndLabel;
-
                         ctx.font = `bold ${labelFontSize}px sans-serif`;
-                        const textMetrics = ctx.measureText(styleObj.labelText);
+                        const textMetrics = ctx.measureText(downloadItem.style.labelText);
                         const textWidth = textMetrics.width;
-                        const boxPaddingX = 60; // Wider bubble
-
+                        const boxPaddingX = 60;
                         const boxWidth = textWidth + (boxPaddingX * 2);
                         const boxHeight = labelBoxHeight;
-
-                        // Draw Bubble Background (Rounded Rect)
-                        ctx.fillStyle = brandColor;
-                        const radius = 40; // Larger radius
+                        const radius = 40;
                         const x = centerX - (boxWidth / 2);
                         const y = labelY;
 
+                        ctx.fillStyle = brandColor;
                         ctx.beginPath();
                         ctx.moveTo(x + radius, y);
                         ctx.lineTo(x + boxWidth - radius, y);
@@ -140,24 +133,18 @@ export default function Dashboard() {
                         ctx.closePath();
                         ctx.fill();
 
-                        // Draw Wide Triangle Connection (merging border and label)
                         const pointerWidth = 60;
                         ctx.beginPath();
-                        // Point on the label top
                         ctx.moveTo(centerX - (pointerWidth / 2), y + 2);
-                        // Point connecting to QR border bottom
-                        ctx.lineTo(centerX, borderY + borderH - (borderThickness / 2) + 2); // 12 is borderThickness hardcoded or use var
-                        // Point on label top right
+                        ctx.lineTo(centerX, borderY + borderH - (borderThickness / 2) + 2);
                         ctx.lineTo(centerX + (pointerWidth / 2), y + 2);
                         ctx.closePath();
                         ctx.fill();
 
-                        // Draw Text
                         ctx.fillStyle = '#ffffff';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        // Adjust text Y slightly to center in the visual mass of the bubble
-                        ctx.fillText(styleObj.labelText, centerX, y + (boxHeight / 2) + 4);
+                        ctx.fillText(downloadItem.style.labelText, centerX, y + (boxHeight / 2) + 4);
                     }
 
                     const link = document.createElement('a');
@@ -169,12 +156,12 @@ export default function Dashboard() {
                 }
             }
             setDownloadItem(null);
-        }, 500); // 500ms delay to ensure render
-
+        }, 500);
         return () => clearTimeout(timer);
     }, [downloadItem]);
 
-    const prepareDownload = (item: QRCodeData) => {
+
+    const prepareDownload = (item: QRCodeItem) => {
         let style: QRStyle = {
             fgColor: '#000000',
             bgColor: '#ffffff',
@@ -182,24 +169,15 @@ export default function Dashboard() {
             eyeRadius: [0, 0, 0, 0],
             labelText: ''
         };
-
         if (item.style) {
-            try {
-                style = JSON.parse(item.style);
-            } catch (e) {
-                console.error("Failed to parse style", e);
-            }
+            try { style = JSON.parse(item.style); } catch (e) { console.error("Failed to parse style", e); }
         }
-
         setDownloadItem({ item, style });
     };
 
-    const getUrl = (qr: QRCodeData) => {
-        // Always return the standard app specific URL
-        return `${window.location.origin}/${qr.id}`;
-    };
+    const getUrl = (qr: QRCodeItem) => `${window.location.origin}/${qr.id}`;
 
-    const handleMove = async (qr: QRCodeData, newFolder: string) => {
+    const handleMove = async (qr: QRCodeItem, newFolder: string) => {
         try {
             const res = await fetch(`/api/qr/${qr.id}/folder`, {
                 method: 'PATCH',
@@ -207,8 +185,8 @@ export default function Dashboard() {
                 body: JSON.stringify({ folder: newFolder })
             });
             if (res.ok) {
-                // Update local state to reflect change (optimistic or re-fetch)
-                setQrCodes(prev => prev.map(q => q.id === qr.id ? { ...q, folder: newFolder } : q));
+                // If we are in "Marketing" and move to "General", it should disappear from this list.
+                setQrCodes(prev => prev.filter(q => q.id !== qr.id));
             } else {
                 alert('Failed to move QR code');
             }
@@ -218,12 +196,12 @@ export default function Dashboard() {
     };
 
     return (
-        <div>
-            <div className={styles.headerAction}>
-                <h1 className={styles.pageTitle}>My QR Codes</h1>
-                <Link href="/dashboard/create" className={styles.createBtn}>
-                    <Plus size={20} /> Create QR Code
+        <div style={{ paddingBottom: '4rem' }}>
+            <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <Link href="/dashboard/folders" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#64748b' }}>
+                    <ArrowLeft size={20} /> Back to Folders
                 </Link>
+                <h1 style={{ fontSize: '2rem', fontWeight: 700, margin: 0 }}>{folderName}</h1>
             </div>
 
             {/* Hidden Downloader */}
@@ -233,24 +211,21 @@ export default function Dashboard() {
                         id="qr-download-canvas"
                         value={getUrl(downloadItem.item)}
                         style={downloadItem.style}
-                        size={1000} // High res for download
+                        size={1000}
                     />
                 )}
             </div>
 
             {loading ? (
-                <div className={styles.loading}>Loading...</div>
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>Loading...</div>
             ) : qrCodes.length === 0 ? (
-                <div className={styles.emptyState}>
-                    <QrCode size={48} className={styles.emptyIcon} />
-                    <h3>No QR Codes yet</h3>
-                    <p>Create your first dynamic QR code to get started.</p>
-                    <Link href="/dashboard/create" className={styles.createBtn}>
-                        Create Now
-                    </Link>
+                <div style={{ textAlign: 'center', padding: '4rem', background: 'white', borderRadius: '16px', border: '2px dashed #e2e8f0' }}>
+                    <QrCode size={48} style={{ color: '#cbd5e1', marginBottom: '1rem' }} />
+                    <h3>Detailed Folder Empty</h3>
+                    <p>Move QR codes here to see them.</p>
                 </div>
             ) : (
-                <div className={styles.grid}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                     {qrCodes.map(qr => (
                         <QRCodeCard
                             key={qr.id}
