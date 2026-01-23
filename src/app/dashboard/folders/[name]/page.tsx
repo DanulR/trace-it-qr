@@ -15,36 +15,36 @@ import { QRCodeData, Folder } from '@/lib/db';
 import { QRCodePreview, QRStyle } from '@/components/QRCodePreview';
 
 // Duplicate basic types if needed or import
-interface QRCodeItem extends QRCodeData {
-    // any extra fields?
-}
-
-export default function FolderViewPage({ params }: { params: { name: string } }) {
+export default function FolderViewPage({ params }: { params: Promise<{ name: string }> }) {
     const [qrCodes, setQrCodes] = useState<QRCodeItem[]>([]);
     const [folders, setFolders] = useState<Folder[]>([]);
     const [loading, setLoading] = useState(true);
     const [downloadItem, setDownloadItem] = useState<{ item: QRCodeItem, style: QRStyle } | null>(null);
-    const folderName = decodeURIComponent(params.name);
+    // State to hold the unwrapped param
+    const [folderName, setFolderName] = useState<string>('');
     const router = useRouter();
 
     useEffect(() => {
-        // Fetch all QRs and filter client side (easier for now vs new API arg)
-        // Optimization: Create specific API later.
-        // Actually, db.ts doesn't have "getQRByFolder".
-        // I will just fetch all and filter.
-        Promise.all([
-            fetch('/api/qr').then(res => res.json()),
-            fetch('/api/folders').then(res => res.json())
-        ]).then(([qrs, folderList]) => {
-            const filtered = qrs.filter((q: QRCodeItem) => q.folder === folderName);
-            setQrCodes(filtered);
-            setFolders(folderList);
-            setLoading(false);
-        }).catch(err => {
-            console.error(err);
-            setLoading(false);
+        // Unwrap params
+        params.then(p => {
+            const name = decodeURIComponent(p.name);
+            setFolderName(name);
+
+            // Move fetch logic here or use another effect dependent on folderName
+            Promise.all([
+                fetch('/api/qr').then(res => res.json()),
+                fetch('/api/folders').then(res => res.json())
+            ]).then(([qrs, folderList]) => {
+                const filtered = qrs.filter((q: QRCodeItem) => q.folder === name);
+                setQrCodes(filtered);
+                setFolders(folderList);
+                setLoading(false);
+            }).catch(err => {
+                console.error(err);
+                setLoading(false);
+            });
         });
-    }, [folderName]);
+    }, [params]);
 
     // Copy download logic from dashboard (unfortunately duplicated logic for now)
     // TODO: move this logic to a hook or context
