@@ -110,7 +110,7 @@ export default function CreateQR() {
         bgColor: '#ffffff',
         logoImage: '/logo.png', // Static logo
         eyeRadius: [0, 0, 0, 0], // Square by default
-        labelText: '',
+        labelText: 'Trace-it',
     });
 
     // Determine preview value
