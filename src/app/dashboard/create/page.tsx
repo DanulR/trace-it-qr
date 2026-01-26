@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Link as LinkIcon, FileText, ShieldCheck, Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
+import { Link as LinkIcon, FileText, ShieldCheck, Plus, Trash2, Save, ArrowLeft, FolderPlus, X } from 'lucide-react';
 import Link from 'next/link';
 import styles from './create.module.css';
 import { QRCodePreview, QRStyle } from '@/components/QRCodePreview';
@@ -13,15 +13,26 @@ type LinkItem = {
     icon: string;
 };
 
+type Folder = {
+    id: string;
+    name: string;
+};
+
 export default function CreateQR() {
     const router = useRouter();
     const [mode, setMode] = useState<'link' | 'landing' | 'verified_content'>('verified_content');
     const [loading, setLoading] = useState(false);
 
     // Common Fields
-    const [title, setTitle] = useState('');
+    // Title is now auto-generated, not manually input (except as specific fields like Org Name)
     const [folder, setFolder] = useState('General');
     const [customDomain, setCustomDomain] = useState('');
+
+    // Folder Management
+    const [folders, setFolders] = useState<Folder[]>([]);
+    const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+    const [newFolderName, setNewFolderName] = useState('');
+    const [isFolderLoading, setIsFolderLoading] = useState(false);
 
     // Link Mode
     const [destinationUrl, setDestinationUrl] = useState('');
@@ -35,7 +46,50 @@ export default function CreateQR() {
 
     // Verified Content Mode
     const [organization, setOrganization] = useState('');
-    const [contentCategory, setContentCategory] = useState('Official Statement');
+    // Content Category is fixed to Fact Check
+    const [contentCategory] = useState('Fact Check');
+
+    useEffect(() => {
+        fetchFolders();
+    }, []);
+
+    const fetchFolders = async () => {
+        try {
+            const res = await fetch('/api/folders');
+            if (res.ok) {
+                const data = await res.json();
+                setFolders(data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch folders', error);
+        }
+    };
+
+    const handleCreateFolder = async () => {
+        if (!newFolderName.trim()) return;
+        setIsFolderLoading(true);
+        try {
+            const res = await fetch('/api/folders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newFolderName }),
+            });
+
+            if (res.ok) {
+                await fetchFolders();
+                setFolder(newFolderName); // Auto-select new folder
+                setIsCreatingFolder(false);
+                setNewFolderName('');
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to create folder');
+            }
+        } catch (error) {
+            alert('Error creating folder');
+        } finally {
+            setIsFolderLoading(false);
+        }
+    };
 
     const addLink = () => {
         setLandingLinks([...landingLinks, { title: '', url: '', icon: 'globe' }]);
@@ -69,9 +123,26 @@ export default function CreateQR() {
         e.preventDefault();
         setLoading(true);
 
+        // Auto-generate title based on content
+        let autoTitle = 'Untitled QR';
+        if (mode === 'verified_content' && organization) {
+            autoTitle = organization;
+        } else if (mode === 'landing' && landingTitle) {
+            autoTitle = landingTitle;
+        } else if (mode === 'link' && destinationUrl) {
+            try {
+                const urlObj = new URL(destinationUrl);
+                autoTitle = urlObj.hostname;
+            } catch {
+                autoTitle = destinationUrl;
+            }
+        } else {
+            autoTitle = `QR - ${new Date().toLocaleDateString()}`;
+        }
+
         const payload = {
             type: mode,
-            title,
+            title: autoTitle, // internal name is now auto-generated
             folder,
             custom_domain: customDomain,
             organization: mode === 'verified_content' ? organization : undefined,
@@ -142,17 +213,55 @@ export default function CreateQR() {
             <div className={styles.contentWrapper}>
                 <div className={styles.formColumn}>
                     <form onSubmit={handleSubmit} className={styles.form}>
-                        {/* Basic Info */}
+                        {/* Folder Selection (Replaces Internal Name) */}
                         <div className={styles.section}>
-                            <label>Internal Name (for your dashboard)</label>
-                            <input
-                                type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder="e.g. Q1 Financial Report"
-                                required
-                                className={styles.input}
-                            />
+                            <label>Save to Folder</label>
+                            {!isCreatingFolder ? (
+                                <select
+                                    value={folder}
+                                    onChange={(e) => {
+                                        if (e.target.value === '__NEW__') {
+                                            setIsCreatingFolder(true);
+                                        } else {
+                                            setFolder(e.target.value);
+                                        }
+                                    }}
+                                    className={styles.select}
+                                >
+                                    {folders.map(f => (
+                                        <option key={f.id} value={f.name}>{f.name}</option>
+                                    ))}
+                                    <option value="__NEW__" style={{ fontWeight: 'bold', color: '#6366f1' }}>+ Create New Folder</option>
+                                </select>
+                            ) : (
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <input
+                                        type="text"
+                                        value={newFolderName}
+                                        onChange={(e) => setNewFolderName(e.target.value)}
+                                        placeholder="New Folder Name"
+                                        className={styles.input}
+                                        autoFocus
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleCreateFolder}
+                                        className={styles.tab}
+                                        style={{ background: '#6366f1', color: 'white', border: 'none' }}
+                                        disabled={isFolderLoading}
+                                    >
+                                        <Save size={18} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsCreatingFolder(false)}
+                                        className={styles.tab}
+                                        style={{ background: '#ef4444', color: 'white', border: 'none' }}
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {mode === 'verified_content' && (
@@ -168,19 +277,8 @@ export default function CreateQR() {
                                         className={styles.input}
                                     />
                                 </div>
-                                <div className={styles.section}>
-                                    <label>Content Category</label>
-                                    <select
-                                        value={contentCategory}
-                                        onChange={(e) => setContentCategory(e.target.value)}
-                                        className={styles.select}
-                                    >
-                                        <option value="Official Statement">Official Statement</option>
-                                        <option value="Fact Check">Fact Check</option>
-                                        <option value="Research Report">Research Report</option>
-                                        <option value="Press Release">Press Release</option>
-                                    </select>
-                                </div>
+                                {/* REMOVED Content Category Selection - Hardcoded to Fact Check */}
+
                                 <div className={styles.section}>
                                     <label>Source URL (The content to verify)</label>
                                     <input
