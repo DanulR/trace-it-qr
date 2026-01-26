@@ -26,7 +26,7 @@ export default function CreateQR() {
     // Common Fields
     // Title is now auto-generated, not manually input (except as specific fields like Org Name)
     const [folder, setFolder] = useState('General');
-    const [customDomain, setCustomDomain] = useState('');
+    // REMOVED customDomain state
 
     // Folder Management
     const [folders, setFolders] = useState<Folder[]>([]);
@@ -45,7 +45,7 @@ export default function CreateQR() {
     const [themeColor, setThemeColor] = useState('#ffffff');
 
     // Verified Content Mode
-    const [organization, setOrganization] = useState('');
+    // REMOVED organization state
     // Content Category is fixed to Fact Check
     const [contentCategory] = useState('Fact Check');
 
@@ -115,7 +115,7 @@ export default function CreateQR() {
 
     // Determine preview value
     const getPreviewValue = () => {
-        const base = customDomain ? `https://${customDomain}.trace-it.io` : typeof window !== 'undefined' ? window.location.origin : 'https://trace-it.io';
+        const base = typeof window !== 'undefined' ? window.location.origin : 'https://trace-it.io';
         return `${base}/preview-qr-id`;
     };
 
@@ -125,11 +125,9 @@ export default function CreateQR() {
 
         // Auto-generate title based on content
         let autoTitle = 'Untitled QR';
-        if (mode === 'verified_content' && organization) {
-            autoTitle = organization;
-        } else if (mode === 'landing' && landingTitle) {
+        if (mode === 'landing' && landingTitle) {
             autoTitle = landingTitle;
-        } else if (mode === 'link' && destinationUrl) {
+        } else if ((mode === 'link' || mode === 'verified_content') && destinationUrl) {
             try {
                 const urlObj = new URL(destinationUrl);
                 autoTitle = urlObj.hostname;
@@ -144,8 +142,8 @@ export default function CreateQR() {
             type: mode,
             title: autoTitle, // internal name is now auto-generated
             folder,
-            custom_domain: customDomain,
-            organization: mode === 'verified_content' ? organization : undefined,
+            custom_domain: undefined,
+            organization: undefined,
             content_category: mode === 'verified_content' ? contentCategory : undefined,
             destination_url: (mode === 'link' || mode === 'verified_content') ? destinationUrl : undefined,
             landing_content: mode === 'landing' ? {
@@ -266,17 +264,7 @@ export default function CreateQR() {
 
                         {mode === 'verified_content' && (
                             <div className={styles.landingForm}>
-                                <div className={styles.section}>
-                                    <label>Organization Name</label>
-                                    <input
-                                        type="text"
-                                        value={organization}
-                                        onChange={(e) => setOrganization(e.target.value)}
-                                        placeholder="e.g. Verité Research"
-                                        required
-                                        className={styles.input}
-                                    />
-                                </div>
+
                                 {/* REMOVED Content Category Selection - Hardcoded to Fact Check */}
 
                                 <div className={styles.section}>
@@ -290,20 +278,7 @@ export default function CreateQR() {
                                         className={styles.input}
                                     />
                                 </div>
-                                <div className={styles.section}>
-                                    <label>Custom Domain (Verification Source)</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <input
-                                            type="text"
-                                            value={customDomain}
-                                            onChange={(e) => setCustomDomain(e.target.value)}
-                                            placeholder="veriteresearch"
-                                            className={styles.input}
-                                            style={{ flex: 1 }}
-                                        />
-                                        <span style={{ color: '#94a3b8' }}>.trace-it.io</span>
-                                    </div>
-                                </div>
+
                             </div>
                         )}
 
