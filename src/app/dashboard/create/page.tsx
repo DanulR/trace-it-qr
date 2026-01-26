@@ -108,7 +108,7 @@ export default function CreateQR() {
     const [qrStyle, setQrStyle] = useState<QRStyle>({
         fgColor: '#000000',
         bgColor: '#ffffff',
-        logoImage: '/logo-placeholder.png', // Or empty string, user can paste URL
+        logoImage: '/logo.png', // Static logo
         eyeRadius: [0, 0, 0, 0], // Square by default
         labelText: '',
     });
@@ -346,16 +346,7 @@ export default function CreateQR() {
                                 </div>
                             </div>
 
-                            <div className={styles.section}>
-                                <label>Logo URL (Center Image)</label>
-                                <input
-                                    type="text"
-                                    value={qrStyle.logoImage}
-                                    onChange={(e) => setQrStyle({ ...qrStyle, logoImage: e.target.value })}
-                                    placeholder="https://..."
-                                    className={styles.input}
-                                />
-                            </div>
+                            {/* Logo URL input removed for static image */}
 
                             <div className={styles.section}>
                                 <label>Label Text (Below QR)</label>
