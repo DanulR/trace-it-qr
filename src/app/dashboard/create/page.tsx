@@ -46,8 +46,11 @@ export default function CreateQR() {
 
     // Verified Content Mode
     // REMOVED organization state
+    // Verified Content Mode
+    // REMOVED organization state
     // Content Category is fixed to Fact Check
     const [contentCategory] = useState('Fact Check');
+    const [sourceUrls, setSourceUrls] = useState<string[]>(['']);
 
     useEffect(() => {
         fetchFolders();
@@ -105,6 +108,22 @@ export default function CreateQR() {
         setLandingLinks(newLinks);
     };
 
+    const addSourceUrl = () => {
+        setSourceUrls([...sourceUrls, '']);
+    };
+
+    const removeSourceUrl = (index: number) => {
+        if (sourceUrls.length > 1) {
+            setSourceUrls(sourceUrls.filter((_, i) => i !== index));
+        }
+    };
+
+    const updateSourceUrl = (index: number, value: string) => {
+        const newUrls = [...sourceUrls];
+        newUrls[index] = value;
+        setSourceUrls(newUrls);
+    };
+
     const [qrStyle, setQrStyle] = useState<QRStyle>({
         fgColor: '#000000',
         bgColor: '#ffffff',
@@ -127,16 +146,27 @@ export default function CreateQR() {
         let autoTitle = 'Untitled QR';
         if (mode === 'landing' && landingTitle) {
             autoTitle = landingTitle;
-        } else if ((mode === 'link' || mode === 'verified_content') && destinationUrl) {
+        } else if (mode === 'link' && destinationUrl) {
             try {
                 const urlObj = new URL(destinationUrl);
                 autoTitle = urlObj.hostname;
             } catch {
                 autoTitle = destinationUrl;
             }
+        } else if (mode === 'verified_content' && sourceUrls.length > 0 && sourceUrls[0]) {
+            try {
+                const urlObj = new URL(sourceUrls[0]);
+                autoTitle = urlObj.hostname;
+            } catch {
+                autoTitle = sourceUrls[0];
+            }
         } else {
             autoTitle = `QR - ${new Date().toLocaleDateString()}`;
         }
+
+        const finalDestinationUrl = mode === 'verified_content'
+            ? JSON.stringify(sourceUrls.filter(u => u.trim() !== ''))
+            : destinationUrl;
 
         const payload = {
             type: mode,
@@ -145,7 +175,7 @@ export default function CreateQR() {
             custom_domain: undefined,
             organization: undefined,
             content_category: mode === 'verified_content' ? contentCategory : undefined,
-            destination_url: (mode === 'link' || mode === 'verified_content') ? destinationUrl : undefined,
+            destination_url: (mode === 'link' || mode === 'verified_content') ? finalDestinationUrl : undefined,
             landing_content: mode === 'landing' ? {
                 title: landingTitle,
                 description: landingDesc,
@@ -268,15 +298,37 @@ export default function CreateQR() {
                                 {/* REMOVED Content Category Selection - Hardcoded to Fact Check */}
 
                                 <div className={styles.section}>
-                                    <label>Source URL (The content to verify)</label>
-                                    <input
-                                        type="url"
-                                        value={destinationUrl}
-                                        onChange={(e) => setDestinationUrl(e.target.value)}
-                                        placeholder="https://..."
-                                        required
-                                        className={styles.input}
-                                    />
+                                    <label>Source URLs (The content to verify)</label>
+                                    {sourceUrls.map((url, index) => (
+                                        <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                            <input
+                                                type="url"
+                                                value={url}
+                                                onChange={(e) => updateSourceUrl(index, e.target.value)}
+                                                placeholder="https://..."
+                                                required={index === 0} // Only first one required
+                                                className={styles.input}
+                                            />
+                                            {sourceUrls.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeSourceUrl(index)}
+                                                    className={styles.destructiveBtn}
+                                                    style={{ padding: '0.5rem' }}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={addSourceUrl}
+                                        className={styles.secondaryBtn}
+                                        style={{ marginTop: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                    >
+                                        <Plus size={14} /> Add Another Source URL
+                                    </button>
                                 </div>
 
                             </div>

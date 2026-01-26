@@ -136,25 +136,46 @@ export default async function PublicQRPage({
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #e2e8f0' }}>
-                            <a
-                                href={qrData.destination_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                    display: 'block',
-                                    width: '100%',
-                                    backgroundColor: '#0f172a',
-                                    color: 'white',
-                                    textAlign: 'center',
-                                    padding: '1rem',
-                                    borderRadius: '0.5rem',
-                                    textDecoration: 'none',
-                                    fontWeight: '600'
-                                }}
-                            >
-                                View Original Content
-                            </a>
+                        <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #e2e8f0', width: '100%' }}>
+                            {(() => {
+                                let urls: string[] = [];
+                                if (qrData.destination_url) {
+                                    try {
+                                        const parsed = JSON.parse(qrData.destination_url);
+                                        if (Array.isArray(parsed)) {
+                                            urls = parsed;
+                                        } else {
+                                            urls = [qrData.destination_url];
+                                        }
+                                    } catch (e) {
+                                        urls = [qrData.destination_url];
+                                    }
+                                }
+
+                                return urls.map((url, index) => (
+                                    <a
+                                        key={index}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            display: 'block',
+                                            width: '100%',
+                                            backgroundColor: '#0f172a',
+                                            color: 'white',
+                                            textAlign: 'center',
+                                            padding: '1rem',
+                                            borderRadius: '0.5rem',
+                                            textDecoration: 'none',
+                                            fontWeight: '600',
+                                            marginBottom: '0.5rem'
+                                        }}
+                                    >
+                                        {urls.length > 1 ? `View Original Content ${index + 1}` : 'View Original Content'}
+                                    </a>
+                                ));
+                            })()}
+
                             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.8rem', color: '#64748b' }}>
                                 You will be redirected to the external source.
                             </p>
