@@ -1,8 +1,6 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Link as LinkIcon, FileText, ShieldCheck, Plus, Trash2, Save, ArrowLeft, FolderPlus, X } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, X, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import styles from './create.module.css';
 import { QRCodePreview, QRStyle } from '@/components/QRCodePreview';
@@ -20,7 +18,8 @@ type Folder = {
 
 export default function CreateQR() {
     const router = useRouter();
-    const [mode, setMode] = useState<'link' | 'landing' | 'verified_content'>('verified_content');
+    // Hardcoded to 'verified_content'
+    const mode = 'verified_content';
     const [loading, setLoading] = useState(false);
 
     // Common Fields
@@ -34,18 +33,6 @@ export default function CreateQR() {
     const [newFolderName, setNewFolderName] = useState('');
     const [isFolderLoading, setIsFolderLoading] = useState(false);
 
-    // Link Mode
-    const [destinationUrl, setDestinationUrl] = useState('');
-
-    // Landing Mode
-    const [landingTitle, setLandingTitle] = useState('');
-    const [landingDesc, setLandingDesc] = useState('');
-    const [landingImage, setLandingImage] = useState('');
-    const [landingLinks, setLandingLinks] = useState<LinkItem[]>([{ title: '', url: '', icon: 'globe' }]);
-    const [themeColor, setThemeColor] = useState('#ffffff');
-
-    // Verified Content Mode
-    // REMOVED organization state
     // Verified Content Mode
     // REMOVED organization state
     // Content Category is fixed to Fact Check
@@ -94,20 +81,6 @@ export default function CreateQR() {
         }
     };
 
-    const addLink = () => {
-        setLandingLinks([...landingLinks, { title: '', url: '', icon: 'globe' }]);
-    };
-
-    const removeLink = (index: number) => {
-        setLandingLinks(landingLinks.filter((_, i) => i !== index));
-    };
-
-    const updateLink = (index: number, field: keyof LinkItem, value: string) => {
-        const newLinks = [...landingLinks];
-        newLinks[index][field] = value;
-        setLandingLinks(newLinks);
-    };
-
     const addSourceUrl = () => {
         setSourceUrls([...sourceUrls, '']);
     };
@@ -144,16 +117,8 @@ export default function CreateQR() {
 
         // Auto-generate title based on content
         let autoTitle = 'Untitled QR';
-        if (mode === 'landing' && landingTitle) {
-            autoTitle = landingTitle;
-        } else if (mode === 'link' && destinationUrl) {
-            try {
-                const urlObj = new URL(destinationUrl);
-                autoTitle = urlObj.hostname;
-            } catch {
-                autoTitle = destinationUrl;
-            }
-        } else if (mode === 'verified_content' && sourceUrls.length > 0 && sourceUrls[0]) {
+
+        if (sourceUrls.length > 0 && sourceUrls[0]) {
             try {
                 const urlObj = new URL(sourceUrls[0]);
                 autoTitle = urlObj.hostname;
@@ -164,9 +129,7 @@ export default function CreateQR() {
             autoTitle = `QR - ${new Date().toLocaleDateString()}`;
         }
 
-        const finalDestinationUrl = mode === 'verified_content'
-            ? JSON.stringify(sourceUrls.filter(u => u.trim() !== ''))
-            : destinationUrl;
+        const finalDestinationUrl = JSON.stringify(sourceUrls.filter(u => u.trim() !== ''));
 
         const payload = {
             type: mode,
@@ -174,15 +137,9 @@ export default function CreateQR() {
             folder,
             custom_domain: undefined,
             organization: undefined,
-            content_category: mode === 'verified_content' ? contentCategory : undefined,
-            destination_url: (mode === 'link' || mode === 'verified_content') ? finalDestinationUrl : undefined,
-            landing_content: mode === 'landing' ? {
-                title: landingTitle,
-                description: landingDesc,
-                image: landingImage,
-                links: landingLinks,
-                theme: { background: themeColor }
-            } : undefined,
+            content_category: contentCategory,
+            destination_url: finalDestinationUrl,
+            landing_content: undefined,
             style: qrStyle
         };
 
@@ -215,27 +172,6 @@ export default function CreateQR() {
                     <ArrowLeft size={18} /> Back
                 </Link>
                 <h1>Create New QR Code</h1>
-            </div>
-
-            <div className={styles.tabs}>
-                <button
-                    className={`${styles.tab} ${mode === 'verified_content' ? styles.activeTab : ''}`}
-                    onClick={() => setMode('verified_content')}
-                >
-                    <ShieldCheck size={18} /> Verified Content
-                </button>
-                <button
-                    className={`${styles.tab} ${mode === 'landing' ? styles.activeTab : ''}`}
-                    onClick={() => setMode('landing')}
-                >
-                    <FileText size={18} /> Landing Page
-                </button>
-                <button
-                    className={`${styles.tab} ${mode === 'link' ? styles.activeTab : ''}`}
-                    onClick={() => setMode('link')}
-                >
-                    <LinkIcon size={18} /> Website URL
-                </button>
             </div>
 
             <div className={styles.contentWrapper}>
@@ -292,61 +228,46 @@ export default function CreateQR() {
                             )}
                         </div>
 
-                        {mode === 'verified_content' && (
-                            <div className={styles.landingForm}>
+                        {/* Verified Content Form (Always showing now) */}
+                        <div className={styles.landingForm}>
 
-                                {/* REMOVED Content Category Selection - Hardcoded to Fact Check */}
+                            {/* REMOVED Content Category Selection - Hardcoded to Fact Check */}
 
-                                <div className={styles.section}>
-                                    <label>Source URLs (The content to verify)</label>
-                                    {sourceUrls.map((url, index) => (
-                                        <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                            <input
-                                                type="url"
-                                                value={url}
-                                                onChange={(e) => updateSourceUrl(index, e.target.value)}
-                                                placeholder="https://..."
-                                                required={index === 0} // Only first one required
-                                                className={styles.input}
-                                            />
-                                            {sourceUrls.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeSourceUrl(index)}
-                                                    className={styles.destructiveBtn}
-                                                    style={{ padding: '0.5rem' }}
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={addSourceUrl}
-                                        className={styles.secondaryBtn}
-                                        style={{ marginTop: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                                    >
-                                        <Plus size={14} /> Add Another Source URL
-                                    </button>
-                                </div>
-
-                            </div>
-                        )}
-
-                        {mode === 'link' && (
                             <div className={styles.section}>
-                                <label>Destination URL</label>
-                                <input
-                                    type="url"
-                                    value={destinationUrl}
-                                    onChange={(e) => setDestinationUrl(e.target.value)}
-                                    placeholder="https://example.com"
-                                    required
-                                    className={styles.input}
-                                />
+                                <label>Source URLs (The content to verify)</label>
+                                {sourceUrls.map((url, index) => (
+                                    <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                        <input
+                                            type="url"
+                                            value={url}
+                                            onChange={(e) => updateSourceUrl(index, e.target.value)}
+                                            placeholder="https://..."
+                                            required={index === 0} // Only first one required
+                                            className={styles.input}
+                                        />
+                                        {sourceUrls.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeSourceUrl(index)}
+                                                className={styles.destructiveBtn}
+                                                style={{ padding: '0.5rem' }}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={addSourceUrl}
+                                    className={styles.secondaryBtn}
+                                    style={{ marginTop: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                >
+                                    <Plus size={14} /> Add Another Source URL
+                                </button>
                             </div>
-                        )}
+
+                        </div>
 
                         {/* Design Customization */}
                         <div className={styles.advancedSection}>
