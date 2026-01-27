@@ -21,11 +21,12 @@ type Folder = {
 export default function CreateQR() {
     const router = useRouter();
     // Hardcoded to 'verified_content'
+    // Hardcoded to 'verified_content'
     const mode = 'verified_content';
     const [loading, setLoading] = useState(false);
 
     // Common Fields
-    // Title is now auto-generated, not manually input (except as specific fields like Org Name)
+    const [qrName, setQrName] = useState('');
     const [folder, setFolder] = useState('General');
     // REMOVED customDomain state
 
@@ -120,7 +121,9 @@ export default function CreateQR() {
         // Auto-generate title based on content
         let autoTitle = 'Untitled QR';
 
-        if (sourceUrls.length > 0 && sourceUrls[0]) {
+        if (qrName.trim()) {
+            autoTitle = qrName;
+        } else if (sourceUrls.length > 0 && sourceUrls[0]) {
             try {
                 const urlObj = new URL(sourceUrls[0]);
                 autoTitle = urlObj.hostname;
@@ -179,6 +182,18 @@ export default function CreateQR() {
             <div className={styles.contentWrapper}>
                 <div className={styles.formColumn}>
                     <form onSubmit={handleSubmit} className={styles.form}>
+                        {/* Name Field */}
+                        <div className={styles.section}>
+                            <label>QR Code Name</label>
+                            <input
+                                type="text"
+                                value={qrName}
+                                onChange={(e) => setQrName(e.target.value)}
+                                placeholder="E.g. Summer Campaign 2026"
+                                className={styles.input}
+                            />
+                        </div>
+
                         {/* Folder Selection (Replaces Internal Name) */}
                         <div className={styles.section}>
                             <label>Save to Folder</label>
