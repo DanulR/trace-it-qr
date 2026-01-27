@@ -98,7 +98,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
             </div>
 
             <div className={styles.cardActions}>
-                <Link href={`/${qr.id}`} target="_blank" className={styles.actionLink}>
+                <Link href={`/${qr.id}?preview=true`} target="_blank" className={styles.actionLink}>
                     <ExternalLink size={14} /> View
                 </Link>
                 <button
