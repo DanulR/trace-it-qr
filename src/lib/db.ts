@@ -282,3 +282,22 @@ export async function updateQRFolder(qrId: string, folderName: string) {
     return db.prepare('UPDATE qr_codes SET folder = ? WHERE id = ?').run(folderName, qrId);
   }
 }
+
+export async function updateQRCode(id: string, updates: Partial<QRCodeData>) {
+  const allowedFields = ['title', 'destination_url'];
+  const fieldsToUpdate = Object.keys(updates).filter(key => allowedFields.includes(key));
+
+  if (fieldsToUpdate.length === 0) return;
+
+  const setClause = fieldsToUpdate.map(key => `${key} = ?`).join(', ');
+  const values = fieldsToUpdate.map(key => (updates as any)[key]);
+
+  if (useTurso) {
+    return await db.execute({
+      sql: `UPDATE qr_codes SET ${setClause} WHERE id = ?`,
+      args: [...values, id]
+    });
+  } else {
+    return db.prepare(`UPDATE qr_codes SET ${setClause} WHERE id = ?`).run(...values, id);
+  }
+}
