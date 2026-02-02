@@ -48,6 +48,13 @@ export async function POST(request: Request) {
                 title: title,
                 destination_url: '', // Empty initially? Or should we ask? User said "number of qr codes and the folder name only"
                 folder: folderName,
+                style: JSON.stringify({
+                    fgColor: '#000000',
+                    bgColor: '#ffffff',
+                    logoImage: '/logo.png',
+                    eyeRadius: [0, 0, 0, 0],
+                    labelText: 'Trace-it'
+                })
             });
             createdIds.push(id);
         }
