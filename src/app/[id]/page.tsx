@@ -20,6 +20,40 @@ export default async function PublicQRPage({
 
     // Client-side tracking & redirect
     if (qrData.type === 'link') {
+        if (!qrData.destination_url) {
+            return (
+                <div style={{
+                    minHeight: '100vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    fontFamily: 'sans-serif',
+                    padding: '2rem',
+                    textAlign: 'center',
+                    color: '#334155',
+                    backgroundColor: '#f8fafc'
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '3rem',
+                        borderRadius: '1rem',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        maxWidth: '400px',
+                        width: '100%'
+                    }}>
+                        <div style={{
+                            fontSize: '3rem',
+                            marginBottom: '1rem'
+                        }}>🚧</div>
+                        <h1 style={{ marginBottom: '0.5rem', color: '#0f172a' }}>Setup Required</h1>
+                        <p style={{ color: '#64748b' }}>
+                            This QR code has been created but not yet configured.
+                        </p>
+                    </div>
+                </div>
+            );
+        }
         return <ScanTracker id={id} type="link" destinationUrl={qrData.destination_url} />;
     }
 
