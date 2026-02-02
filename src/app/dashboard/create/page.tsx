@@ -170,6 +170,51 @@ export default function CreateQR() {
         }
     };
 
+    const [showBulkModal, setShowBulkModal] = useState(false);
+    const [bulkCount, setBulkCount] = useState(5);
+    const [bulkFolder, setBulkFolder] = useState('General');
+    const [isCreatingBulkFolder, setIsCreatingBulkFolder] = useState(false);
+    const [newBulkFolderName, setNewBulkFolderName] = useState('');
+    const [isBulkLoading, setIsBulkLoading] = useState(false);
+
+    const handleBulkCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsBulkLoading(true);
+
+        const targetFolder = isCreatingBulkFolder ? newBulkFolderName : bulkFolder;
+
+        if (!targetFolder.trim()) {
+            alert('Please select or enter a folder name');
+            setIsBulkLoading(false);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/qr/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    count: bulkCount,
+                    folder: targetFolder
+                }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                alert(`Successfully created ${data.count} QR codes in "${data.folder}"`);
+                router.push('/dashboard');
+                router.refresh();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to bulk create QR codes');
+            }
+        } catch (err: any) {
+            alert('Something went wrong: ' + err.message);
+        } finally {
+            setIsBulkLoading(false);
+        }
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
@@ -177,7 +222,110 @@ export default function CreateQR() {
                     <ArrowLeft size={18} /> Back
                 </Link>
                 <h1>Create New QR Code</h1>
+                <button
+                    onClick={() => setShowBulkModal(true)}
+                    className={styles.secondaryBtn}
+                    style={{ marginLeft: 'auto' }}
+                >
+                    <Plus size={16} /> Bulk Create
+                </button>
             </div>
+
+            {/* Bulk Creation Modal */}
+            {showBulkModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: 'white', padding: '2rem', borderRadius: '8px',
+                        width: '400px', maxWidth: '90%', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b' }}>Bulk Create QR Codes</h2>
+                            <button onClick={() => setShowBulkModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                                <X size={20} color="#64748b" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleBulkCreate}>
+                            <div className={styles.section}>
+                                <label>Number of QR Codes</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    value={bulkCount}
+                                    onChange={(e) => setBulkCount(parseInt(e.target.value) || 0)}
+                                    className={styles.input}
+                                />
+                            </div>
+
+                            <div className={styles.section}>
+                                <label>Save to Folder</label>
+                                {!isCreatingBulkFolder ? (
+                                    <select
+                                        value={bulkFolder}
+                                        onChange={(e) => {
+                                            if (e.target.value === '__NEW__') {
+                                                setIsCreatingBulkFolder(true);
+                                                setBulkFolder('');
+                                            } else {
+                                                setBulkFolder(e.target.value);
+                                            }
+                                        }}
+                                        className={styles.select}
+                                    >
+                                        {folders.map(f => (
+                                            <option key={f.id} value={f.name}>{f.name}</option>
+                                        ))}
+                                        <option value="__NEW__" style={{ fontWeight: 'bold', color: '#6366f1' }}>+ Create New Folder</option>
+                                    </select>
+                                ) : (
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <input
+                                            type="text"
+                                            value={newBulkFolderName}
+                                            onChange={(e) => setNewBulkFolderName(e.target.value)}
+                                            placeholder="New Folder Name"
+                                            className={styles.input}
+                                            autoFocus
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCreatingBulkFolder(false)}
+                                            className={styles.tab}
+                                            style={{ background: '#ef4444', color: 'white', border: 'none' }}
+                                        >
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowBulkModal(false)}
+                                    className={styles.secondaryBtn}
+                                    style={{ background: '#f1f5f9', color: '#64748b', border: 'none' }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className={styles.submitBtn}
+                                    disabled={isBulkLoading}
+                                    style={{ width: 'auto', padding: '0.5rem 1.5rem' }}
+                                >
+                                    {isBulkLoading ? 'Creating...' : 'Generate QRs'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <div className={styles.contentWrapper}>
                 <div className={styles.formColumn}>
