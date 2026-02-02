@@ -195,6 +195,38 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
         }
     };
 
+    const handleUpdate = async (qr: QRCodeData, newTitle: string, newUrl?: string) => {
+        try {
+            const res = await fetch(`/api/qr/${qr.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: newTitle,
+                    destination_url: newUrl
+                })
+            });
+
+            if (res.ok) {
+                setQrCodes(prev => prev.map(q => {
+                    if (q.id === qr.id) {
+                        return {
+                            ...q,
+                            title: newTitle,
+                            destination_url: newUrl !== undefined ? newUrl : q.destination_url
+                        };
+                    }
+                    return q;
+                }));
+            } else {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to update');
+            }
+        } catch (e: any) {
+            console.error(e);
+            throw e; // Re-throw to be handled by Card component
+        }
+    };
+
     return (
         <div style={{ paddingBottom: '4rem' }}>
             <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -232,6 +264,7 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
                             qr={qr}
                             onDownload={prepareDownload}
                             onMove={handleMove}
+                            onUpdate={handleUpdate}
                             folders={folders}
                         />
                     ))}
