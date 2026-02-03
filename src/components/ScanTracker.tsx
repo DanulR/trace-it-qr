@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { ShieldCheck, Link as LinkIcon, ExternalLink } from 'lucide-react';
 
 export default function ScanTracker({
     id,
@@ -51,75 +52,128 @@ export default function ScanTracker({
     if (isPreview && type === 'link') {
         return (
             <div style={{
+                minHeight: '100vh',
+                backgroundColor: '#f8fafc',
+                color: '#0f172a',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'center',
                 alignItems: 'center',
-                height: '100vh',
-                fontFamily: 'sans-serif',
-                padding: '2rem',
-                backgroundColor: '#f8fafc',
-                color: '#334155'
+                fontFamily: 'sans-serif'
             }}>
+                {/* Header */}
                 <div style={{
-                    backgroundColor: 'white',
-                    padding: '2rem',
-                    borderRadius: '0.75rem',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    maxWidth: '500px',
                     width: '100%',
-                    textAlign: 'center'
+                    backgroundColor: '#22c55e',
+                    color: 'white',
+                    padding: '1rem',
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontWeight: 'bold'
                 }}>
-                    <div style={{
-                        backgroundColor: '#dbeafe',
-                        color: '#1e40af',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '2rem',
-                        fontSize: '0.875rem',
-                        fontWeight: '600',
-                        display: 'inline-block',
-                        marginBottom: '1.5rem'
-                    }}>
-                        PREVIEW MODE
-                    </div>
-
-                    <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#0f172a' }}>Redirect Destination</h1>
-
-                    <div style={{
-                        padding: '1rem',
-                        backgroundColor: '#f1f5f9',
-                        borderRadius: '0.5rem',
-                        marginBottom: '1.5rem',
-                        wordBreak: 'break-all',
-                        fontSize: '0.9rem',
-                        fontFamily: 'monospace'
-                    }}>
-                        {destinationUrl || 'No destination URL configured'}
-                    </div>
-
-                    {destinationUrl && (
-                        <a
-                            href={destinationUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                display: 'inline-block',
-                                backgroundColor: '#6366f1',
-                                color: 'white',
-                                padding: '0.75rem 1.5rem',
-                                borderRadius: '0.5rem',
-                                textDecoration: 'none',
-                                fontWeight: '500',
-                                transition: 'background-color 0.2s'
-                            }}
-                        >
-                            Visit Link
-                        </a>
-                    )}
+                    <ShieldCheck size={24} />
+                    LINK PREVIEW
                 </div>
-                <p style={{ marginTop: '2rem', fontSize: '0.875rem', color: '#64748b' }}>
-                    This scan will not be counted.
-                </p>
+
+                <div style={{
+                    maxWidth: '600px',
+                    width: '100%',
+                    padding: '2rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2rem'
+                }}>
+                    {/* Main Card */}
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '2rem',
+                        borderRadius: '1rem',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{
+                            width: '80px',
+                            height: '80px',
+                            backgroundColor: '#e2e8f0',
+                            borderRadius: '50%',
+                            margin: '0 auto 1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '2rem',
+                            fontWeight: 'bold',
+                            color: '#64748b'
+                        }}>
+                            <LinkIcon size={40} />
+                        </div>
+                        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                            Redirect Target
+                        </h1>
+                        <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            backgroundColor: '#dcfce7',
+                            color: '#166534',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '1rem',
+                            fontSize: '0.875rem',
+                            fontWeight: '600'
+                        }}>
+                            <ShieldCheck size={14} /> Safe Preview
+                        </div>
+
+                        <div style={{ marginTop: '2rem', textAlign: 'left' }}>
+                            <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Destination URL</label>
+                            <div style={{
+                                padding: '1rem',
+                                backgroundColor: '#f1f5f9',
+                                borderRadius: '0.5rem',
+                                marginTop: '0.5rem',
+                                wordBreak: 'break-all',
+                                fontSize: '0.9rem',
+                                fontFamily: 'monospace',
+                                border: '1px solid #e2e8f0'
+                            }}>
+                                {destinationUrl || 'No destination URL configured'}
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: '2rem' }}>
+                            {destinationUrl && (
+                                <a
+                                    href={destinationUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '100%',
+                                        backgroundColor: '#0f172a',
+                                        color: 'white',
+                                        padding: '1rem',
+                                        borderRadius: '0.5rem',
+                                        textDecoration: 'none',
+                                        fontWeight: '600',
+                                        transition: 'opacity 0.2s'
+                                    }}
+                                >
+                                    Visit Link <ExternalLink size={16} style={{ marginLeft: '8px' }} />
+                                </a>
+                            )}
+                        </div>
+                        <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#64748b' }}>
+                            This scan is not counted in analytics.
+                        </p>
+                    </div>
+                </div>
+
+                <div style={{ marginTop: 'auto', padding: '2rem', color: '#94a3b8', fontSize: '0.8rem' }}>
+                    Powered by Trace-it Verification System
+                </div>
             </div>
         );
     }
