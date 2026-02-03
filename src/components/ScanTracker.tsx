@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function ScanTracker({
     id,
@@ -11,6 +11,7 @@ export default function ScanTracker({
     type: 'link' | 'landing' | 'verified_content';
     destinationUrl?: string;
 }) {
+    const [isPreview, setIsPreview] = useState(false);
     const scanned = useRef(false);
 
     useEffect(() => {
@@ -19,7 +20,8 @@ export default function ScanTracker({
         // 1. Check for Preview Mode
         const searchParams = new URLSearchParams(window.location.search);
         if (searchParams.get('preview') === 'true') {
-            return; // Do not count previews
+            setIsPreview(true);
+            return; // Do not count previews or redirect
         }
 
         // 2. Client-Side Debounce (1 minute)
@@ -45,6 +47,82 @@ export default function ScanTracker({
             window.location.href = destinationUrl;
         }
     }, [id, type, destinationUrl]);
+
+    if (isPreview && type === 'link') {
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                fontFamily: 'sans-serif',
+                padding: '2rem',
+                backgroundColor: '#f8fafc',
+                color: '#334155'
+            }}>
+                <div style={{
+                    backgroundColor: 'white',
+                    padding: '2rem',
+                    borderRadius: '0.75rem',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    maxWidth: '500px',
+                    width: '100%',
+                    textAlign: 'center'
+                }}>
+                    <div style={{
+                        backgroundColor: '#dbeafe',
+                        color: '#1e40af',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '2rem',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        display: 'inline-block',
+                        marginBottom: '1.5rem'
+                    }}>
+                        PREVIEW MODE
+                    </div>
+
+                    <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#0f172a' }}>Redirect Destination</h1>
+
+                    <div style={{
+                        padding: '1rem',
+                        backgroundColor: '#f1f5f9',
+                        borderRadius: '0.5rem',
+                        marginBottom: '1.5rem',
+                        wordBreak: 'break-all',
+                        fontSize: '0.9rem',
+                        fontFamily: 'monospace'
+                    }}>
+                        {destinationUrl || 'No destination URL configured'}
+                    </div>
+
+                    {destinationUrl && (
+                        <a
+                            href={destinationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                display: 'inline-block',
+                                backgroundColor: '#6366f1',
+                                color: 'white',
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '0.5rem',
+                                textDecoration: 'none',
+                                fontWeight: '500',
+                                transition: 'background-color 0.2s'
+                            }}
+                        >
+                            Visit Link
+                        </a>
+                    )}
+                </div>
+                <p style={{ marginTop: '2rem', fontSize: '0.875rem', color: '#64748b' }}>
+                    This scan will not be counted.
+                </p>
+            </div>
+        );
+    }
 
     if (type === 'link') {
         return (
