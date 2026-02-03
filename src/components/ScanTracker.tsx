@@ -20,9 +20,11 @@ export default function ScanTracker({
 
         // 1. Check for Preview Mode
         const searchParams = new URLSearchParams(window.location.search);
-        if (searchParams.get('preview') === 'true') {
+        const isPreviewMode = searchParams.get('preview') === 'true';
+
+        if (isPreviewMode) {
             setIsPreview(true);
-            return; // Do not count previews or redirect
+            return; // Do not count previews
         }
 
         // 2. Client-Side Debounce (1 minute)
@@ -43,13 +45,10 @@ export default function ScanTracker({
             keepalive: true
         }).catch(console.error);
 
-        if (type === 'link' && destinationUrl) {
-            // Redirect after a tick to ensure logic runs
-            window.location.href = destinationUrl;
-        }
+        // Auto-redirect removed to show the intermediate page
     }, [id, type, destinationUrl]);
 
-    if (isPreview && type === 'link') {
+    if (type === 'link') {
         return (
             <div style={{
                 minHeight: '100vh',
@@ -74,7 +73,7 @@ export default function ScanTracker({
                     fontWeight: 'bold'
                 }}>
                     <ShieldCheck size={24} />
-                    LINK PREVIEW
+                    SECURE LINK
                 </div>
 
                 <div style={{
@@ -122,7 +121,7 @@ export default function ScanTracker({
                             fontSize: '0.875rem',
                             fontWeight: '600'
                         }}>
-                            <ShieldCheck size={14} /> Safe Preview
+                            <ShieldCheck size={14} /> Safe Link
                         </div>
                     </div>
 
@@ -189,37 +188,6 @@ export default function ScanTracker({
                 <div style={{ marginTop: 'auto', padding: '2rem', color: '#94a3b8', fontSize: '0.8rem' }}>
                     Powered by Trace-it Verification System
                 </div>
-            </div>
-        );
-    }
-
-    if (type === 'link') {
-        return (
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100vh',
-                fontFamily: 'sans-serif',
-                color: '#666'
-            }}>
-                <div style={{
-                    width: '40px',
-                    height: '40px',
-                    border: '3px solid #f3f3f3',
-                    borderTop: '3px solid #3498db',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite',
-                    marginBottom: '1rem'
-                }}></div>
-                <p>Redirecting...</p>
-                <style jsx global>{`
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                `}</style>
             </div>
         );
     }
