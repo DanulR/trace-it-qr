@@ -123,13 +123,6 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
                     </button>
                     {showMenu && (
                         <div className={styles.dropdown}>
-                            <button
-                                className={styles.dropdownItem}
-                                onClick={() => { setIsEditing(true); setShowMenu(false); }}
-                            >
-                                <Edit2 size={14} style={{ marginRight: '0.5rem' }} /> Edit
-                            </button>
-                            <div className={styles.divider} style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
                             <div style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
                                 Move to Folder
                             </div>
@@ -162,8 +155,26 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
                 <div className={styles.stat}>
                     <BarChart2 size={14} /> {qr.scans} scans
                 </div>
-                <div className={styles.stat}>
-                    <Calendar size={14} /> {new Date(qr.created_at).toLocaleDateString()}
+                <div className={styles.stat} style={{ display: 'flex', alignItems: 'center' }}>
+                    <Calendar size={14} style={{ marginRight: '4px' }} />
+                    {new Date(qr.created_at).toLocaleDateString()}
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#6366f1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            marginLeft: '8px',
+                            padding: '2px',
+                            borderRadius: '4px'
+                        }}
+                        title="Edit"
+                    >
+                        <Edit2 size={14} />
+                    </button>
                 </div>
                 <div className={styles.stat} style={{ marginLeft: 'auto', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {qr.folder && qr.folder !== 'General' && <span style={{ fontSize: '0.7rem', background: '#334155', padding: '2px 6px', borderRadius: '4px', color: 'white' }}>{qr.folder}</span>}
