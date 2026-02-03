@@ -85,7 +85,7 @@ export default function ScanTracker({
                     flexDirection: 'column',
                     gap: '2rem'
                 }}>
-                    {/* Main Card */}
+                    {/* Status Card */}
                     <div style={{
                         backgroundColor: 'white',
                         padding: '2rem',
@@ -124,50 +124,65 @@ export default function ScanTracker({
                         }}>
                             <ShieldCheck size={14} /> Safe Preview
                         </div>
+                    </div>
 
-                        <div style={{ marginTop: '2rem', textAlign: 'left' }}>
-                            <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Destination URL</label>
-                            <div style={{
-                                padding: '1rem',
-                                backgroundColor: '#f1f5f9',
-                                borderRadius: '0.5rem',
-                                marginTop: '0.5rem',
-                                wordBreak: 'break-all',
-                                fontSize: '0.9rem',
-                                fontFamily: 'monospace',
-                                border: '1px solid #e2e8f0'
-                            }}>
-                                {destinationUrl || 'No destination URL configured'}
+                    {/* Content Details Card */}
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '2rem',
+                        borderRadius: '1rem',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}>
+                        <h2 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#334155' }}>
+                            Content Details
+                        </h2>
+
+                        <div style={{ display: 'grid', gap: '1rem' }}>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Link Type</label>
+                                <p style={{ fontWeight: '500' }}>External Redirect</p>
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Destination</label>
+                                <p style={{
+                                    fontFamily: 'monospace',
+                                    background: '#f1f5f9',
+                                    padding: '0.5rem',
+                                    borderRadius: '0.25rem',
+                                    fontSize: '0.9rem',
+                                    wordBreak: 'break-all',
+                                    marginTop: '0.25rem'
+                                }}>
+                                    {destinationUrl || 'N/A'}
+                                </p>
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '2rem' }}>
+                        <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #e2e8f0' }}>
                             {destinationUrl && (
                                 <a
                                     href={destinationUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
+                                        display: 'block',
                                         width: '100%',
                                         backgroundColor: '#0f172a',
                                         color: 'white',
+                                        textAlign: 'center',
                                         padding: '1rem',
                                         borderRadius: '0.5rem',
                                         textDecoration: 'none',
-                                        fontWeight: '600',
-                                        transition: 'opacity 0.2s'
+                                        fontWeight: '600'
                                     }}
                                 >
-                                    Visit Link <ExternalLink size={16} style={{ marginLeft: '8px' }} />
+                                    View Original Content
                                 </a>
                             )}
+                            <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.8rem', color: '#64748b' }}>
+                                You will be redirected to the external source.
+                            </p>
                         </div>
-                        <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#64748b' }}>
-                            This scan is not counted in analytics.
-                        </p>
                     </div>
                 </div>
 
