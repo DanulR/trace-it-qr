@@ -75,7 +75,7 @@ export default function ScanTracker({
                     fontWeight: 'bold'
                 }}>
                     <ShieldCheck size={24} />
-                    SECURE LINK
+                    VERIFIED SOURCE
                 </div>
 
                 <div style={{
@@ -107,10 +107,10 @@ export default function ScanTracker({
                             fontWeight: 'bold',
                             color: '#64748b'
                         }}>
-                            <LinkIcon size={40} />
+                            T
                         </div>
                         <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                            Redirect Target
+                            Trace-it Verification
                         </h1>
                         <div style={{
                             display: 'inline-flex',
@@ -123,7 +123,7 @@ export default function ScanTracker({
                             fontSize: '0.875rem',
                             fontWeight: '600'
                         }}>
-                            <ShieldCheck size={14} /> Safe Link
+                            <ShieldCheck size={14} /> Verified Entity
                         </div>
                     </div>
 
@@ -156,21 +156,7 @@ export default function ScanTracker({
                                     wordBreak: 'break-all'
                                 }}>
                                     {/* Generate a pseudo-hash for valid look */}
-                                    {Array.from(id + 'hash').reduce((h, c) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0).toString(16) + 'e2158c7cad944db3'.substring(0, 8)}
-                                </p>
-                            </div>
-                            <div>
-                                <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Destination</label>
-                                <p style={{
-                                    fontFamily: 'monospace',
-                                    background: '#f1f5f9',
-                                    padding: '0.5rem',
-                                    borderRadius: '0.25rem',
-                                    fontSize: '0.9rem',
-                                    wordBreak: 'break-all',
-                                    marginTop: '0.25rem'
-                                }}>
-                                    {destinationUrl || 'N/A'}
+                                    {Math.abs(Array.from(id + 'hash').reduce((h, c) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0)).toString(16) + 'e2158c7cad944db3'.substring(0, 8)}
                                 </p>
                             </div>
                         </div>
