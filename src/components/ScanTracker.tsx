@@ -54,8 +54,8 @@ export default function ScanTracker({
         return (
             <div style={{
                 minHeight: '100vh',
-                backgroundColor: '#f8fafc',
-                color: '#0f172a',
+                backgroundColor: 'var(--secondary)',
+                color: 'var(--foreground)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -64,7 +64,7 @@ export default function ScanTracker({
                 {/* Header */}
                 <div style={{
                     width: '100%',
-                    backgroundColor: '#22c55e',
+                    backgroundColor: 'var(--success)',
                     color: 'white',
                     padding: '1rem',
                     textAlign: 'center',
@@ -88,7 +88,7 @@ export default function ScanTracker({
                 }}>
                     {/* Status Card */}
                     <div style={{
-                        backgroundColor: 'white',
+                        backgroundColor: 'var(--background)',
                         padding: '2rem',
                         borderRadius: '1rem',
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
@@ -97,7 +97,7 @@ export default function ScanTracker({
                         <div style={{
                             width: '80px',
                             height: '80px',
-                            backgroundColor: '#e2e8f0',
+                            backgroundColor: 'var(--secondary)',
                             borderRadius: '50%',
                             margin: '0 auto 1rem',
                             display: 'flex',
@@ -105,7 +105,7 @@ export default function ScanTracker({
                             justifyContent: 'center',
                             fontSize: '2rem',
                             fontWeight: 'bold',
-                            color: '#64748b'
+                            color: 'var(--muted-foreground)'
                         }}>
                             T
                         </div>
@@ -129,27 +129,27 @@ export default function ScanTracker({
 
                     {/* Content Details Card */}
                     <div style={{
-                        backgroundColor: 'white',
+                        backgroundColor: 'var(--background)',
                         padding: '2rem',
                         borderRadius: '1rem',
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                     }}>
-                        <h2 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#334155' }}>
+                        <h2 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--foreground)' }}>
                             Content Details
                         </h2>
 
                         <div style={{ display: 'grid', gap: '1rem' }}>
                             {createdAt && (
                                 <div>
-                                    <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Published Date</label>
+                                    <label style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Published Date</label>
                                     <p style={{ fontWeight: '500' }}>{new Date(createdAt).toLocaleDateString()}</p>
                                 </div>
                             )}
                             <div>
-                                <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verification Hash</label>
+                                <label style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verification Hash</label>
                                 <p style={{
                                     fontFamily: 'monospace',
-                                    background: '#f1f5f9',
+                                    background: 'var(--secondary)',
                                     padding: '0.5rem',
                                     borderRadius: '0.25rem',
                                     fontSize: '0.9rem',
@@ -161,7 +161,7 @@ export default function ScanTracker({
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #e2e8f0' }}>
+                        <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--border)' }}>
                             {destinationUrl && (
                                 <a
                                     href={destinationUrl}
@@ -170,7 +170,7 @@ export default function ScanTracker({
                                     style={{
                                         display: 'block',
                                         width: '100%',
-                                        backgroundColor: '#0f172a',
+                                        backgroundColor: 'var(--foreground)',
                                         color: 'white',
                                         textAlign: 'center',
                                         padding: '1rem',
@@ -182,14 +182,14 @@ export default function ScanTracker({
                                     View Original Content
                                 </a>
                             )}
-                            <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.8rem', color: '#64748b' }}>
+                            <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>
                                 You will be redirected to the external source.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div style={{ marginTop: 'auto', padding: '2rem', color: '#94a3b8', fontSize: '0.8rem' }}>
+                <div style={{ marginTop: 'auto', padding: '2rem', color: 'var(--muted-foreground)', fontSize: '0.8rem' }}>
                     Powered by Trace-it Verification System
                 </div>
             </div>

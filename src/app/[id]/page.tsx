@@ -31,11 +31,11 @@ export default async function PublicQRPage({
                     fontFamily: 'sans-serif',
                     padding: '2rem',
                     textAlign: 'center',
-                    color: '#334155',
-                    backgroundColor: '#f8fafc'
+                    color: 'var(--foreground)',
+                    backgroundColor: 'var(--secondary)'
                 }}>
                     <div style={{
-                        backgroundColor: 'white',
+                        backgroundColor: 'var(--background)',
                         padding: '3rem',
                         borderRadius: '1rem',
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
@@ -46,8 +46,8 @@ export default async function PublicQRPage({
                             fontSize: '3rem',
                             marginBottom: '1rem'
                         }}>🚧</div>
-                        <h1 style={{ marginBottom: '0.5rem', color: '#0f172a' }}>Setup Required</h1>
-                        <p style={{ color: '#64748b' }}>
+                        <h1 style={{ marginBottom: '0.5rem', color: 'var(--foreground)' }}>Setup Required</h1>
+                        <p style={{ color: 'var(--muted-foreground)' }}>
                             This QR code has been created but not yet configured.
                         </p>
                     </div>
@@ -62,8 +62,8 @@ export default async function PublicQRPage({
         return (
             <div style={{
                 minHeight: '100vh',
-                backgroundColor: '#f8fafc',
-                color: '#0f172a',
+                backgroundColor: 'var(--secondary)',
+                color: 'var(--foreground)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -97,7 +97,7 @@ export default async function PublicQRPage({
                 }}>
                     {/* Organization Card */}
                     <div style={{
-                        backgroundColor: 'white',
+                        backgroundColor: 'var(--background)',
                         padding: '2rem',
                         borderRadius: '1rem',
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
@@ -106,7 +106,7 @@ export default async function PublicQRPage({
                         <div style={{
                             width: '80px',
                             height: '80px',
-                            backgroundColor: '#e2e8f0',
+                            backgroundColor: 'var(--secondary)',
                             borderRadius: '50%',
                             margin: '0 auto 1rem',
                             display: 'flex',
@@ -114,7 +114,7 @@ export default async function PublicQRPage({
                             justifyContent: 'center',
                             fontSize: '2rem',
                             fontWeight: 'bold',
-                            color: '#64748b'
+                            color: 'var(--muted-foreground)'
                         }}>
                             {qrData.organization?.charAt(0) || 'O'}
                         </div>
@@ -136,7 +136,7 @@ export default async function PublicQRPage({
                         </div>
 
                         {qrData.custom_domain && (
-                            <p style={{ marginTop: '1rem', color: '#64748b', fontSize: '0.9rem' }}>
+                            <p style={{ marginTop: '1rem', color: 'var(--muted-foreground)', fontSize: '0.9rem' }}>
                                 Source Domain: <strong>{qrData.custom_domain}.trace-it.io</strong>
                             </p>
                         )}
@@ -144,31 +144,31 @@ export default async function PublicQRPage({
 
                     {/* Content Info */}
                     <div style={{
-                        backgroundColor: 'white',
+                        backgroundColor: 'var(--background)',
                         padding: '2rem',
                         borderRadius: '1rem',
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                     }}>
-                        <h2 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: '#334155' }}>
+                        <h2 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--foreground)' }}>
                             Content Details
                         </h2>
 
                         <div style={{ display: 'grid', gap: '1rem' }}>
 
                             <div>
-                                <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Published Date</label>
+                                <label style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Published Date</label>
                                 <p style={{ fontWeight: '500' }}>{new Date(qrData.created_at).toLocaleDateString()}</p>
                             </div>
                             <div>
-                                <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verification Hash</label>
-                                <p style={{ fontFamily: 'monospace', background: '#f1f5f9', padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.9rem' }}>
+                                <label style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verification Hash</label>
+                                <p style={{ fontFamily: 'monospace', background: 'var(--secondary)', padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.9rem' }}>
                                     {qrData.verification_hash || 'e2158c7cad944db3'}
                                 </p>
                             </div>
 
                         </div>
 
-                        <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #e2e8f0', width: '100%' }}>
+                        <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--border)', width: '100%' }}>
                             {(() => {
                                 let urls: string[] = [];
                                 if (qrData.destination_url) {
@@ -193,7 +193,7 @@ export default async function PublicQRPage({
                                         style={{
                                             display: 'block',
                                             width: '100%',
-                                            backgroundColor: '#0f172a',
+                                            backgroundColor: 'var(--foreground)',
                                             color: 'white',
                                             textAlign: 'center',
                                             padding: '1rem',
@@ -208,14 +208,14 @@ export default async function PublicQRPage({
                                 ));
                             })()}
 
-                            <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.8rem', color: '#64748b' }}>
+                            <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>
                                 You will be redirected to the external source.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div style={{ marginTop: 'auto', padding: '2rem', color: '#94a3b8', fontSize: '0.8rem' }}>
+                <div style={{ marginTop: 'auto', padding: '2rem', color: 'var(--muted-foreground)', fontSize: '0.8rem' }}>
                     Powered by Trace-it Verification System
                 </div>
             </div>
@@ -229,7 +229,7 @@ export default async function PublicQRPage({
         return (
             <div style={{
                 minHeight: '100vh',
-                backgroundColor: content.theme?.background || '#ffffff',
+                backgroundColor: content.theme?.background || 'var(--background)',
                 color: content.theme?.text || '#000000',
                 display: 'flex',
                 flexDirection: 'column',

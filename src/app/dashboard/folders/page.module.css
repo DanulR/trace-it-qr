@@ -8,14 +8,14 @@
 .pageTitle {
     font-size: 2rem;
     font-weight: 700;
-    color: #1a1a1a;
+    color: var(--foreground);
 }
 
 .createBtn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: #8B0000;
+    background: var(--primary);
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -27,12 +27,12 @@
 }
 
 .createBtn:hover {
-    background: #660000;
+    background: var(--primary-hover);
     transform: translateY(-1px);
 }
 
 .createForm {
-    background: white;
+    background: var(--background);
     padding: 1rem;
     border-radius: 12px;
     margin-bottom: 2rem;
@@ -47,13 +47,13 @@
 .input {
     flex: 1;
     padding: 0.75rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 1rem;
 }
 
 .submitBtn {
-    background: #8B0000;
+    background: var(--primary);
     color: white;
     border: none;
     padding: 0 1.5rem;
@@ -63,8 +63,8 @@
 }
 
 .cancelBtn {
-    background: #e2e8f0;
-    color: #475569;
+    background: var(--secondary);
+    color: var(--muted-foreground);
     border: none;
     padding: 0 1.5rem;
     border-radius: 6px;
@@ -75,19 +75,19 @@
 .loading {
     text-align: center;
     padding: 3rem;
-    color: #64748b;
+    color: var(--muted-foreground);
 }
 
 .emptyState {
     text-align: center;
     padding: 4rem 2rem;
-    background: white;
+    background: var(--background);
     border-radius: 16px;
-    border: 2px dashed #e2e8f0;
+    border: 2px dashed var(--border);
 }
 
 .emptyIcon {
-    color: #cbd5e1;
+    color: var(--muted-foreground);
     margin-bottom: 1rem;
 }
 
@@ -98,12 +98,12 @@
 }
 
 .card {
-    background: white;
+    background: var(--background);
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     transition: all 0.2s;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -126,12 +126,10 @@
     justify-content: space-between;
 }
 
-.folderIcon {}
-
 .deleteBtn {
     background: none;
     border: none;
-    color: #cbd5e1;
+    color: var(--muted-foreground);
     cursor: pointer;
     padding: 0.25rem;
     border-radius: 4px;
@@ -152,6 +150,6 @@
 .cardTitle {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--foreground);
     margin: 0.5rem 0 0 0;
 }

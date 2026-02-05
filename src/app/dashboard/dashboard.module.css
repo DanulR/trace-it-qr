@@ -1,15 +1,15 @@
 .dashboardContainer {
     display: flex;
     height: 100vh;
-    background-color: #0f172a;
-    color: #f8fafc;
+    background-color: var(--secondary);
+    color: var(--foreground);
     overflow: hidden;
 }
 
 .sidebar {
     width: 260px;
-    background-color: #1e293b;
-    border-right: 1px solid #334155;
+    background-color: var(--background);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     padding: 1.5rem;
@@ -21,7 +21,7 @@
     gap: 0.75rem;
     font-size: 1.25rem;
     font-weight: 700;
-    color: #818cf8;
+    color: var(--primary);
     margin-bottom: 2.5rem;
 }
 
@@ -38,18 +38,18 @@
     gap: 0.75rem;
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
-    color: #94a3b8;
+    color: var(--muted-foreground);
     transition: all 0.2s;
     font-weight: 500;
 }
 
 .navItem:hover {
-    background-color: #334155;
-    color: #f8fafc;
+    background-color: var(--secondary);
+    color: var(--primary);
 }
 
 .footer {
-    border-top: 1px solid #334155;
+    border-top: 1px solid var(--border);
     padding-top: 1.5rem;
 }
 
@@ -81,16 +81,16 @@
 
 .header {
     height: 64px;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 2rem;
-    background-color: #0f172a;
+    background-color: var(--background);
 }
 
 .breadcrumbs {
-    color: #94a3b8;
+    color: var(--muted-foreground);
     font-size: 0.9rem;
 }
 
@@ -105,7 +105,7 @@
 .avatar {
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: var(--primary);
     border-radius: 50%;
     display: flex;
     align-items: center;

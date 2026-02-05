@@ -8,11 +8,11 @@
 .pageTitle {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--foreground);
 }
 
 .createBtn {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: var(--primary);
     color: white;
     padding: 0.75rem 1.25rem;
     border-radius: 0.5rem;
@@ -29,7 +29,7 @@
 
 .loading {
     text-align: center;
-    color: #94a3b8;
+    color: var(--muted-foreground);
     margin-top: 4rem;
 }
 
@@ -39,25 +39,25 @@
     align-items: center;
     justify-content: center;
     padding: 4rem;
-    background: rgba(30, 41, 59, 0.5);
+    background: var(--background);
     border-radius: 1rem;
-    border: 1px dashed #475569;
+    border: 1px dashed var(--border);
     text-align: center;
 }
 
 .emptyIcon {
-    color: #64748b;
+    color: var(--muted-foreground);
     margin-bottom: 1rem;
 }
 
 .emptyState h3 {
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
-    color: #e2e8f0;
+    color: var(--foreground);
 }
 
 .emptyState p {
-    color: #94a3b8;
+    color: var(--muted-foreground);
     margin-bottom: 1.5rem;
 }
 
@@ -68,8 +68,8 @@
 }
 
 .card {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--background);
+    border: 1px solid var(--border);
     border-radius: 0.75rem;
     padding: 1.5rem;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -78,7 +78,7 @@
 .card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-    border-color: #475569;
+    border-color: var(--primary);
 }
 
 .cardHeader {
@@ -94,32 +94,32 @@
     font-weight: 700;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
-    background: rgba(99, 102, 241, 0.1);
-    color: #818cf8;
+    background: rgba(118, 50, 63, 0.1);
+    color: var(--primary);
 }
 
 .moreBtn {
     background: none;
     border: none;
-    color: #64748b;
+    color: var(--muted-foreground);
     cursor: pointer;
     padding: 0.25rem;
 }
 
 .moreBtn:hover {
-    color: #e2e8f0;
+    color: var(--foreground);
 }
 
 .cardTitle {
     font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 0.25rem;
-    color: #f1f5f9;
+    color: var(--foreground);
 }
 
 .cardUrl {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--muted-foreground);
     margin-bottom: 1.5rem;
     white-space: nowrap;
     overflow: hidden;
@@ -131,7 +131,7 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border);
 }
 
 .stat {
@@ -139,7 +139,7 @@
     align-items: center;
     gap: 0.4rem;
     font-size: 0.8rem;
-    color: #64748b;
+    color: var(--muted-foreground);
 }
 
 .cardActions {
@@ -163,21 +163,21 @@
 }
 
 .actionLink {
-    background: #334155;
-    color: #e2e8f0;
+    background: var(--secondary);
+    color: var(--foreground);
 }
 
 .actionLink:hover {
-    background: #475569;
+    background: var(--border);
 }
 
 .downloadBtn {
     background: transparent;
-    border: 1px solid #334155;
-    color: #94a3b8;
+    border: 1px solid var(--border);
+    color: var(--muted-foreground);
 }
 
 .downloadBtn:hover {
-    border-color: #475569;
-    color: #e2e8f0;
+    border-color: var(--primary);
+    color: var(--primary);
 }
