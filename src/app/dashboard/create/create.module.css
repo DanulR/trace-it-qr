@@ -237,15 +237,63 @@
     gap: 0.5rem;
     margin-top: 1rem;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
     border: none;
 }
 
 .submitBtn:hover {
     opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
 }
 
 .submitBtn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.secondaryBtn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid #334155;
+    background: transparent;
+    color: #94a3b8;
+}
+
+.secondaryBtn:hover {
+    background: #334155;
+    color: white;
+}
+
+.bulkCreateBtn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    /* Emerald Green gradient */
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+    /* margin-left: auto handled in JS or parent layout, but good to keep flexible */
+}
+
+.bulkCreateBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4);
+    background: linear-gradient(135deg, #34d399, #10b981);
 }

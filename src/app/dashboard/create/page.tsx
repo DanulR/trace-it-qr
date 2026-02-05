@@ -224,10 +224,10 @@ export default function CreateQR() {
                 <h1>Create New QR Code</h1>
                 <button
                     onClick={() => setShowBulkModal(true)}
-                    className={styles.secondaryBtn}
+                    className={styles.bulkCreateBtn}
                     style={{ marginLeft: 'auto' }}
                 >
-                    <Plus size={16} /> Bulk Create
+                    <Plus size={20} /> Bulk Create
                 </button>
             </div>
 
