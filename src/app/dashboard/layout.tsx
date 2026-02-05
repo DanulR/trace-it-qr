@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { LayoutDashboard, PlusCircle, FolderOpen, Settings, LogOut, QrCode } from 'lucide-react';
 import styles from './dashboard.module.css';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function DashboardLayout({
     children,
@@ -40,9 +41,12 @@ export default function DashboardLayout({
             <main className={styles.mainContent}>
                 <header className={styles.header}>
                     <div className={styles.breadcrumbs}>Dashboard / Overview</div>
-                    <div className={styles.userProfile}>
-                        <div className={styles.avatar}>U</div>
-                        <span>User Name</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <ThemeToggle />
+                        <div className={styles.userProfile}>
+                            <div className={styles.avatar}>U</div>
+                            <span>User Name</span>
+                        </div>
                     </div>
                 </header>
                 <div className={styles.contentScroll}>

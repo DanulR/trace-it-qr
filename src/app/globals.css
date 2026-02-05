@@ -13,6 +13,19 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --primary: #76323f;
+  --primary-hover: #9c4250;
+  --secondary: #1e293b;
+  --accent: #c09f80;
+  --muted-foreground: #94a3b8;
+  --border: #334155;
+  --error: #ef4444;
+  --success: #22c55e;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
