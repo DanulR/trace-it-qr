@@ -6,11 +6,13 @@ import { ShieldCheck, Link as LinkIcon, ExternalLink } from 'lucide-react';
 export default function ScanTracker({
     id,
     type,
-    destinationUrl
+    destinationUrl,
+    createdAt
 }: {
     id: string;
     type: 'link' | 'landing' | 'verified_content';
     destinationUrl?: string;
+    createdAt?: string;
 }) {
     const [isPreview, setIsPreview] = useState(false);
     const scanned = useRef(false);
@@ -138,9 +140,15 @@ export default function ScanTracker({
 
                         <div style={{ display: 'grid', gap: '1rem' }}>
                             <div>
-                                <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Link Type</label>
-                                <p style={{ fontWeight: '500' }}>External Redirect</p>
+                                <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Category</label>
+                                <p style={{ fontWeight: '500' }}>External Link</p>
                             </div>
+                            {createdAt && (
+                                <div>
+                                    <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Published Date</label>
+                                    <p style={{ fontWeight: '500' }}>{new Date(createdAt).toLocaleDateString()}</p>
+                                </div>
+                            )}
                             <div>
                                 <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Destination</label>
                                 <p style={{

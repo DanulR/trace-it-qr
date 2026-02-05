@@ -54,7 +54,7 @@ export default async function PublicQRPage({
                 </div>
             );
         }
-        return <ScanTracker id={id} type="link" destinationUrl={qrData.destination_url} />;
+        return <ScanTracker id={id} type="link" destinationUrl={qrData.destination_url} createdAt={qrData.created_at} />;
     }
 
     // Handle Verified Content Page
@@ -162,12 +162,7 @@ export default async function PublicQRPage({
                                 <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Published Date</label>
                                 <p style={{ fontWeight: '500' }}>{new Date(qrData.created_at).toLocaleDateString()}</p>
                             </div>
-                            <div>
-                                <label style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verification Hash</label>
-                                <p style={{ fontFamily: 'monospace', background: '#f1f5f9', padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.9rem' }}>
-                                    {qrData.verification_hash || 'N/A'}
-                                </p>
-                            </div>
+
                         </div>
 
                         <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #e2e8f0', width: '100%' }}>
