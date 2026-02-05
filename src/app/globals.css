@@ -1,14 +1,14 @@
 :root {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --secondary: #1e293b;
-  --accent: #8b5cf6;
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --primary: #76323f;
+  --primary-hover: #5e2832;
+  --secondary: #f3f4f6;
+  --accent: #c09f80;
   --error: #ef4444;
   --success: #22c55e;
-  --border: #334155;
-  --radius: 0.75rem;
+  --border: #e5e7eb;
+  --radius: 0.5rem;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
