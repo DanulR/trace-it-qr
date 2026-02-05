@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { MoreVertical, ExternalLink, QrCode, BarChart2, Calendar, FolderInput, Edit2, X, Check } from 'lucide-react';
+import { ExternalLink, QrCode, BarChart2, Calendar, FolderInput, Edit2, X, Check, Folder as FolderIcon } from 'lucide-react';
 import styles from './QRCodeCard.module.css';
 import { QRCodeData } from '@/lib/db';
 import { Folder } from '@/lib/db'; // Make sure Folder type is exported or define it here
@@ -117,33 +117,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
                 <div className={styles.typeBadge}>
                     {qr.type === 'link' ? 'URL' : (qr.type === 'verified_content' ? 'Verified' : 'Page')}
                 </div>
-                <div className={styles.moreContainer} ref={menuRef}>
-                    <button className={styles.moreBtn} onClick={() => setShowMenu(!showMenu)}>
-                        <MoreVertical size={16} />
-                    </button>
-                    {showMenu && (
-                        <div className={styles.dropdown}>
-                            <div style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
-                                Move to Folder
-                            </div>
-                            {folders.length === 0 ? (
-                                <div style={{ padding: '0.5rem', fontSize: '0.8rem', color: '#64748b' }}>No folders</div>
-                            ) : (
-                                folders.map(f => (
-                                    <button
-                                        key={f.id}
-                                        className={styles.dropdownItem}
-                                        onClick={() => handleMove(f.name)}
-                                        disabled={qr.folder === f.name}
-                                        style={{ opacity: qr.folder === f.name ? 0.5 : 1 }}
-                                    >
-                                        {f.name}
-                                    </button>
-                                ))
-                            )}
-                        </div>
-                    )}
-                </div>
+
             </div>
 
             <h3 className={styles.cardTitle}>{qr.title}</h3>
@@ -175,10 +149,51 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
                     >
                         <Edit2 size={14} />
                     </button>
+                    {/* Folder Move Button */}
+                    <div style={{ position: 'relative', marginLeft: '8px' }} ref={menuRef}>
+                        <button
+                            onClick={() => setShowMenu(!showMenu)}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: '#64748b',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '0.8rem',
+                                padding: '2px',
+                            }}
+                            title="Move to Folder"
+                        >
+                            <FolderIcon size={14} />
+                            <span>{qr.folder || 'General'}</span>
+                        </button>
+                        {showMenu && (
+                            <div className={styles.dropdown} style={{ right: 'auto', left: 0, top: '100%', marginTop: '4px' }}>
+                                <div style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                                    Move to Folder
+                                </div>
+                                {folders.length === 0 ? (
+                                    <div style={{ padding: '0.5rem', fontSize: '0.8rem', color: '#64748b' }}>No folders</div>
+                                ) : (
+                                    folders.map(f => (
+                                        <button
+                                            key={f.id}
+                                            className={styles.dropdownItem}
+                                            onClick={() => handleMove(f.name)}
+                                            disabled={qr.folder === f.name}
+                                            style={{ opacity: qr.folder === f.name ? 0.5 : 1 }}
+                                        >
+                                            {f.name}
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <div className={styles.stat} style={{ marginLeft: 'auto', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {qr.folder && qr.folder !== 'General' && <span style={{ fontSize: '0.7rem', background: '#334155', padding: '2px 6px', borderRadius: '4px', color: 'white' }}>{qr.folder}</span>}
-                </div>
+
             </div>
 
             <div className={styles.cardActions}>
