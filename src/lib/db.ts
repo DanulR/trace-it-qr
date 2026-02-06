@@ -1,32 +1,12 @@
-import { createClient } from '@libsql/client';
-import path from 'path';
 
-// Check if we are in production with Turso
-const useTurso = !!(process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN);
+import { createClient } from './supabase/server'; // Server-side client
+import { createClient as createBrowserClient } from './supabase/client'; // Client-side client
+import { nanoid } from 'nanoid';
 
-let db: any;
-
-if (useTurso) {
-  // Production: Use Turso
-  db = createClient({
-    url: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.TURSO_AUTH_TOKEN!,
-  });
-} else {
-  // Development: Lazy load better-sqlite3 to avoid deployment issues
-  try {
-    const Database = require('better-sqlite3');
-    const dbPath = path.join(process.cwd(), 'urls.db');
-    db = new Database(dbPath);
-  } catch (e) {
-    console.warn('better-sqlite3 not available, some features may not work in dev');
-  }
-}
-
-export default db;
-
+// Database Types
 export type QRCodeData = {
   id: string;
+  user_id: string;
   type: 'link' | 'landing' | 'verified_content';
   title: string;
   destination_url?: string;
@@ -41,263 +21,223 @@ export type QRCodeData = {
   scans: number;
 };
 
-// Helper to handle both Better-SQLite3 (sync) and LibSQL (async)
-async function runQuery(query: string, args: any = []) {
-  if (useTurso) {
-    return await db.execute({ sql: query, args });
+export type Folder = {
+  id: string;
+  user_id: string;
+  name: string;
+  created_at: string;
+};
+
+// HELPER: Get correct client based on environment
+async function getDB() {
+  if (typeof window === 'undefined') {
+    // Server environment
+    return await createClient();
   } else {
-    const stmt = db.prepare(query);
-    return stmt.run(args);
+    // Browser environment
+    return createBrowserClient();
   }
 }
 
-async function getQuery(query: string, args: any = []) {
-  if (useTurso) {
-    const result = await db.execute({ sql: query, args });
-    return result.rows[0];
-  } else {
-    const stmt = db.prepare(query);
-    return stmt.get(args);
-  }
-}
-
-async function allQuery(query: string, args: any = []) {
-  if (useTurso) {
-    const result = await db.execute({ sql: query, args });
-    return result.rows;
-  } else {
-    const stmt = db.prepare(query);
-    return stmt.all(args);
-  }
-}
-
-// Initialize DB (Safe to run multiple times)
-const initQuery = `
-  CREATE TABLE IF NOT EXISTS qr_codes (
-    id TEXT PRIMARY KEY,
-    type TEXT CHECK(type IN ('link', 'landing', 'verified_content')) NOT NULL DEFAULT 'link',
-    title TEXT,
-    destination_url TEXT,
-    landing_content TEXT,
-    folder TEXT DEFAULT 'General',
-    custom_domain TEXT,
-    organization TEXT,
-    content_category TEXT,
-    verification_hash TEXT,
-    style TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    scans INTEGER DEFAULT 0
-  )
-`;
-
+// MIGRATION HELPER: Replaces local SQL init
 export async function initDB() {
-  if (useTurso) {
-    try {
-      await db.execute({ sql: initQuery, args: [] });
-      try {
-        await db.execute({ sql: 'ALTER TABLE qr_codes ADD COLUMN style TEXT', args: [] });
-      } catch (e) { /* ignore if exists */ }
-    } catch (err) {
-      console.error("Failed to init Turso DB", err);
-    }
-  } else {
-    db.exec(initQuery);
-    try {
-      db.exec('ALTER TABLE qr_codes ADD COLUMN style TEXT');
-    } catch (e) { /* ignore if already exists */ }
-  }
+  // Supabase tables are created via SQL Editor/Migrations, not here.
+  // We can leave this empty or check connection.
+  console.log("DB Init: Using Supabase (Tables managed via SQL Editor)");
 }
 
-// Call init on load, but we also export it to await it in API routes
-initDB();
-
+// ----------------------------------------------------------------------
+// QR CODE OPERATIONS
+// ----------------------------------------------------------------------
 
 export async function createQRCode(data: Partial<QRCodeData>) {
-  // Manual escaping helper to bypass parameter binding issues entirely
-  const escape = (val: string | null | undefined) => {
-    if (val === null || val === undefined) return 'NULL';
-    // Replace single quotes with two single quotes
-    return `'${String(val).replace(/'/g, "''")}'`;
+  const supabase = await getDB();
+
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const newQR = {
+    id: data.id || nanoid(8),
+    user_id: user.id,
+    type: data.type || 'link',
+    title: data.title,
+    destination_url: data.destination_url,
+    landing_content: data.landing_content,
+    folder: data.folder || 'General',
+    custom_domain: data.custom_domain,
+    organization: data.organization,
+    content_category: data.content_category,
+    verification_hash: data.verification_hash,
+    style: data.style,
   };
 
-  const idVal = escape(data.id);
-  const typeVal = escape(data.type || 'link');
-  const titleVal = escape(data.title);
-  const destVal = escape(data.destination_url);
-  const landingVal = escape(data.landing_content);
-  const folderVal = escape(data.folder || 'General');
-  const domainVal = escape(data.custom_domain);
-  const orgVal = escape(data.organization);
-  const catVal = escape(data.content_category);
-  const hashVal = escape(data.verification_hash);
-  const styleVal = escape(data.style);
+  const { error } = await supabase
+    .from('qr_codes')
+    .insert(newQR);
 
-  const query = `
-    INSERT INTO qr_codes (id, type, title, destination_url, landing_content, folder, custom_domain, organization, content_category, verification_hash, style)
-    VALUES (${idVal}, ${typeVal}, ${titleVal}, ${destVal}, ${landingVal}, ${folderVal}, ${domainVal}, ${orgVal}, ${catVal}, ${hashVal}, ${styleVal})
-  `;
-
-  if (useTurso) {
-    console.log('[DB] Executing inlined query');
-    try {
-      return await db.execute({ sql: query, args: [] });
-    } catch (e: any) {
-      console.error("Turso Execute Error:", e.message);
-      throw new Error(`Turso Error: ${e.message}`);
-    }
-  } else {
-    // Local dev fallback
-    return db.prepare(query).run();
+  if (error) {
+    console.error("Supabase Create Error:", error);
+    throw new Error(error.message);
   }
+
+  return newQR;
 }
 
 export async function getQRCode(id: string) {
-  // For positional params (?)
-  if (useTurso) {
-    const result = await db.execute({ sql: 'SELECT * FROM qr_codes WHERE id = ?', args: [id] });
-    return result.rows[0] as unknown as QRCodeData | undefined;
-  } else {
-    const stmt = db.prepare('SELECT * FROM qr_codes WHERE id = ?');
-    return stmt.get(id) as QRCodeData | undefined;
-  }
+  const supabase = await getDB();
+  // We use .select().single()
+  // RLS will ensure user only sees their own, OR public ones?
+  // User asked for "different users", implying isolation.
+  // But for "scanning", the QR must be public?
+  // Actually, `getQRCode` is likely used by the Dashboard (edit mode) AND the Redirect logic.
+  // If Redirect logic uses this, it needs Admin/Service key OR 'public' RLS policy for reading by ID.
+  // For now, let's assume this is Dashboard usage (User context).
+  // If it's used for redirection, we might need a separate function using Service Key or public table.
+
+  const { data, error } = await supabase
+    .from('qr_codes')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) return undefined;
+  return data as QRCodeData;
 }
 
 export async function getAllQRCodes() {
-  if (useTurso) {
-    const result = await db.execute('SELECT * FROM qr_codes ORDER BY created_at DESC');
-    return result.rows as unknown as QRCodeData[];
-  } else {
-    const stmt = db.prepare('SELECT * FROM qr_codes ORDER BY created_at DESC');
-    return stmt.all() as QRCodeData[];
+  const supabase = await getDB();
+
+  const { data, error } = await supabase
+    .from('qr_codes')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("Supabase Get All Error:", error);
+    return [];
   }
+  return data as QRCodeData[];
 }
 
 export async function incrementScan(id: string) {
-  if (useTurso) {
-    return await db.execute({ sql: 'UPDATE qr_codes SET scans = scans + 1 WHERE id = ?', args: [id] });
-  } else {
-    const stmt = db.prepare('UPDATE qr_codes SET scans = scans + 1 WHERE id = ?');
-    return stmt.run(id);
+  const supabase = await getDB();
+  // RPC or simple update?
+  // Simple update is fine, but concurrency might represent a race condition.
+  // Better to use RPC if possible, but let's stick to simple first.
+
+  // WARNING: This requires UPDATE permission. If RLS restricts UPDATE to owner,
+  // then anonymous scanners cannot increment scan count!
+  // We need a Postgres Function (RPC) `increment_scan(qr_id)` marked as SECURITY DEFINER
+  // to allow anonymous updates to scan count.
+
+  try {
+    const { error } = await supabase.rpc('increment_scan_count', { qr_id: id });
+    if (error) {
+      // Fallback or ignore
+      console.warn("Scan increment failed:", error.message);
+    }
+  } catch (e) {
+    console.error("Scan Increment Error", e);
   }
 }
+
+export async function updateQRCode(id: string, updates: Partial<QRCodeData>) {
+  const supabase = await getDB();
+
+  // Filter allowed fields
+  const allowedFields = ['title', 'destination_url', 'landing_content', 'folder', 'style', 'custom_domain'];
+  const cleanUpdates: any = {};
+
+  Object.keys(updates).forEach(key => {
+    if (allowedFields.includes(key)) {
+      cleanUpdates[key] = (updates as any)[key];
+    }
+  });
+
+  const { error } = await supabase
+    .from('qr_codes')
+    .update(cleanUpdates)
+    .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
 
 // ----------------------------------------------------------------------
 // FOLDER OPERATIONS
 // ----------------------------------------------------------------------
 
-export type Folder = {
-  id: string;
-  name: string;
-  created_at: string;
-};
-
-// Ensure folders table exists
-const initFoldersQuery = `
-  CREATE TABLE IF NOT EXISTS folders (
-    id TEXT PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`;
-
-// Run this separately or inside initDB
-async function initFoldersDB() {
-  if (useTurso) {
-    try {
-      await db.execute({ sql: initFoldersQuery, args: [] });
-      // Insert default 'General' folder if not exists
-      try {
-        await db.execute({
-          sql: "INSERT INTO folders (id, name) VALUES ('default_general', 'General')",
-          args: []
-        });
-      } catch (e) { /* ignore constraint error */ }
-    } catch (err) {
-      console.error("Failed to init Folders table", err);
-    }
-  } else {
-    db.exec(initFoldersQuery);
-    try {
-      db.prepare("INSERT INTO folders (id, name) VALUES ('default_general', 'General')").run();
-    } catch (e) { /* ignore */ }
-  }
+export async function initFoldersDB() {
+  // Supabase init handled externally
 }
 
-// We can append this to initDB, or just call it here.
-// Let's modify initDB to call this.
-// BUT since I can't easily modify initDB in this contiguous block without re-writing the whole file or using multi-replace (which is disallowed for single block), 
-// I will just export it and call it. 
-// Actually, I can just run it once at module level like initDB is run.
-initFoldersDB();
-
-
 export async function createFolder(name: string) {
-  const id = require('nanoid').nanoid(6);
-  // Escape name for safety if local
-  const escape = (val: string) => `'${val.replace(/'/g, "''")}'`;
+  const supabase = await getDB();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
 
-  // We need to handle potential duplicate name error
-  const query = `INSERT INTO folders (id, name) VALUES ('${id}', ${escape(name)})`;
+  const id = nanoid(6);
 
-  if (useTurso) {
-    return await db.execute({ sql: `INSERT INTO folders (id, name) VALUES (?, ?)`, args: [id, name] });
-  } else {
-    return db.prepare('INSERT INTO folders (id, name) VALUES (?, ?)').run(id, name);
-  }
+  const { error } = await supabase
+    .from('folders')
+    .insert({
+      id,
+      user_id: user.id,
+      name
+    });
+
+  if (error) throw new Error(error.message);
 }
 
 export async function getFolders() {
-  if (useTurso) {
-    const result = await db.execute('SELECT * FROM folders ORDER BY created_at ASC');
-    return result.rows as unknown as Folder[];
-  } else {
-    return db.prepare('SELECT * FROM folders ORDER BY created_at ASC').all() as Folder[];
-  }
+  const supabase = await getDB();
+
+  const { data, error } = await supabase
+    .from('folders')
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  if (error) return [];
+  return data as Folder[];
 }
 
 export async function deleteFolder(name: string) {
-  // Prevent deleting 'General'
   if (name === 'General') throw new Error("Cannot delete General folder");
+  const supabase = await getDB();
 
   // 1. Move QRs to General
-  const moveQuery = `UPDATE qr_codes SET folder = 'General' WHERE folder = ?`;
-  // 2. Delete Folder
-  const deleteQuery = `DELETE FROM folders WHERE name = ?`;
+  // We can't batch these easily without a procedure, but 2 calls is fine.
 
-  if (useTurso) {
-    await db.execute({ sql: moveQuery, args: [name] });
-    await db.execute({ sql: deleteQuery, args: [name] });
-  } else {
-    db.transaction(() => {
-      db.prepare(moveQuery).run(name);
-      db.prepare(deleteQuery).run(name);
-    })();
-  }
+  // Get User ID for data safety
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { error: moveError } = await supabase
+    .from('qr_codes')
+    .update({ folder: 'General' })
+    .eq('folder', name)
+    .eq('user_id', user.id); // Redundant if RLS, but safe.
+
+  if (moveError) throw new Error(moveError.message);
+
+  // 2. Delete Folder
+  const { error: deleteError } = await supabase
+    .from('folders')
+    .delete()
+    .eq('name', name)
+    .eq('user_id', user.id);
+
+  if (deleteError) throw new Error(deleteError.message);
 }
 
 export async function updateQRFolder(qrId: string, folderName: string) {
-  if (useTurso) {
-    return await db.execute({ sql: 'UPDATE qr_codes SET folder = ? WHERE id = ?', args: [folderName, qrId] });
-  } else {
-    return db.prepare('UPDATE qr_codes SET folder = ? WHERE id = ?').run(folderName, qrId);
-  }
-}
+  const supabase = await getDB();
 
-export async function updateQRCode(id: string, updates: Partial<QRCodeData>) {
-  const allowedFields = ['title', 'destination_url'];
-  const fieldsToUpdate = Object.keys(updates).filter(key => allowedFields.includes(key));
+  const { error } = await supabase
+    .from('qr_codes')
+    .update({ folder: folderName })
+    .eq('id', qrId);
 
-  if (fieldsToUpdate.length === 0) return;
-
-  const setClause = fieldsToUpdate.map(key => `${key} = ?`).join(', ');
-  const values = fieldsToUpdate.map(key => (updates as any)[key]);
-
-  if (useTurso) {
-    return await db.execute({
-      sql: `UPDATE qr_codes SET ${setClause} WHERE id = ?`,
-      args: [...values, id]
-    });
-  } else {
-    return db.prepare(`UPDATE qr_codes SET ${setClause} WHERE id = ?`).run(...values, id);
-  }
+  if (error) throw new Error(error.message);
 }

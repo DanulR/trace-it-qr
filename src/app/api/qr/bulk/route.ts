@@ -27,7 +27,12 @@ export async function POST(request: Request) {
                 await createFolder(folderName);
             } catch (e: any) {
                 // Ignore if unique constraint fails (race condition)
-                if (!e.message?.includes('UNIQUE')) {
+                // Postgres: code 23505 or message includes "violates unique constraint"
+                if (
+                    !e.message?.includes('UNIQUE') &&
+                    !e.message?.includes('violates unique constraint') &&
+                    e.code !== '23505'
+                ) {
                     throw e;
                 }
             }
