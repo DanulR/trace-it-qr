@@ -277,6 +277,9 @@ export default function CreateQR() {
                                         }}
                                         className={styles.select}
                                     >
+                                        {!folders.some(f => f.name === 'General') && (
+                                            <option value="General">General</option>
+                                        )}
                                         {folders.map(f => (
                                             <option key={f.id} value={f.name}>{f.name}</option>
                                         ))}
@@ -357,6 +360,9 @@ export default function CreateQR() {
                                     }}
                                     className={styles.select}
                                 >
+                                    {!folders.some(f => f.name === 'General') && (
+                                        <option value="General">General</option>
+                                    )}
                                     {folders.map(f => (
                                         <option key={f.id} value={f.name}>{f.name}</option>
                                     ))}

@@ -105,6 +105,28 @@ export async function getQRCode(id: string) {
   return data as QRCodeData;
 }
 
+export async function getPublicQRCode(id: string) {
+  const supabase = await getDB();
+
+  // Use RPC (Security Definer Function) to bypass RLS for public access
+  const { data, error } = await supabase
+    .rpc('get_public_qr', { p_id: id });
+
+  if (error || !data) return undefined;
+
+  // RPC returns array or single object depending on definition, usually single JSON or row
+  // If defined as returns setof qr_codes, we get array. If returns qr_codes, single.
+  // We'll assume the SQL definition returns a single row or null.
+  // Actually, standard rpc returns data as is.
+  // If the function returns "setof", it's an array.
+  // We will write the SQL to return "SETOF qr_codes" and take the first one.
+
+  if (Array.isArray(data)) {
+    return data[0] as QRCodeData;
+  }
+  return data as QRCodeData;
+}
+
 export async function getAllQRCodes() {
   const supabase = await getDB();
 

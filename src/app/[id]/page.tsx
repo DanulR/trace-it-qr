@@ -1,5 +1,5 @@
 import ScanTracker from '@/components/ScanTracker';
-import { getQRCode } from '@/lib/db';
+import { getQRCode, getPublicQRCode } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import { Globe, Link as LinkIcon, Mail, Phone, Facebook, Twitter, Instagram, Linkedin, ShieldCheck, CheckCircle } from 'lucide-react';
 
@@ -12,7 +12,7 @@ export default async function PublicQRPage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const qrData = await getQRCode(id);
+    const qrData = await getPublicQRCode(id);
 
     if (!qrData) {
         notFound();
