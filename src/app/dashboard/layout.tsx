@@ -1,13 +1,23 @@
 import Link from 'next/link';
-import { LayoutDashboard, PlusCircle, FolderOpen, Settings, LogOut, QrCode } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, FolderOpen, Settings, QrCode } from 'lucide-react';
 import styles from './dashboard.module.css';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import LogoutButton from '@/components/LogoutButton';
+import { createClient } from '@/lib/supabase/server';
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const firstName = user?.user_metadata?.first_name || '';
+    const lastName = user?.user_metadata?.last_name || '';
+    const displayName = firstName && lastName ? `${firstName} ${lastName}` : (user?.email || 'User');
+    const email = user?.email || '';
+    const initial = displayName.charAt(0).toUpperCase();
     return (
         <div className={styles.dashboardContainer}>
             <aside className={styles.sidebar}>
@@ -32,9 +42,7 @@ export default function DashboardLayout({
                 </nav>
 
                 <div className={styles.footer}>
-                    <button className={styles.logoutBtn}>
-                        <LogOut size={18} /> Logout
-                    </button>
+                    <LogoutButton className={styles.logoutBtn} />
                 </div>
             </aside>
 
@@ -44,8 +52,11 @@ export default function DashboardLayout({
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <ThemeToggle />
                         <div className={styles.userProfile}>
-                            <div className={styles.avatar}>U</div>
-                            <span>User Name</span>
+                            <div className={styles.avatar}>{initial}</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.2' }}>
+                                <span>{displayName}</span>
+                                <span style={{ fontSize: '0.75rem', opacity: 0.7, fontWeight: 400 }}>{email}</span>
+                            </div>
                         </div>
                     </div>
                 </header>
