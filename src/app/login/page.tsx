@@ -34,7 +34,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center relative overflow-hidden">
+        <div className="fixed inset-0 flex items-center justify-center bg-[#0f172a] overflow-hidden z-50">
             {/* Background Gradient */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#76323f] via-[#2d1218] to-black z-0"></div>
 
