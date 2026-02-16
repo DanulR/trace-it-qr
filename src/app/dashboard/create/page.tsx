@@ -6,6 +6,7 @@ import { Plus, Trash2, Save, ArrowLeft, X, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import styles from './create.module.css';
 import { QRCodePreview, QRStyle } from '@/components/QRCodePreview';
+import { createClient } from '@/lib/supabase/client';
 
 type LinkItem = {
     title: string;
@@ -24,6 +25,8 @@ export default function CreateQR() {
     // Hardcoded to 'verified_content'
     const mode = 'verified_content';
     const [loading, setLoading] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const supabase = createClient();
 
     // Common Fields
     const [qrName, setQrName] = useState('');
@@ -44,7 +47,37 @@ export default function CreateQR() {
 
     useEffect(() => {
         fetchFolders();
+        checkUserAndLoadStyles();
     }, []);
+
+    const checkUserAndLoadStyles = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            // Check Admin Role
+            const role = user.user_metadata?.role;
+            if (role === 'admin') {
+                setIsAdmin(true);
+            }
+
+            // Load User Specific Style from Metadata
+            const userStyle = user.user_metadata?.style;
+            if (userStyle) {
+                const loadedStyle = { ...userStyle };
+
+                // Handle simplified "cornerStyle" property
+                if (userStyle.cornerStyle === 'rounded') {
+                    loadedStyle.eyeRadius = [10, 10, 10, 10];
+                } else if (userStyle.cornerStyle === 'square') {
+                    loadedStyle.eyeRadius = [0, 0, 0, 0];
+                }
+
+                setQrStyle(prev => ({
+                    ...prev,
+                    ...loadedStyle
+                }));
+            }
+        }
+    };
 
     const fetchFolders = async () => {
         try {
@@ -106,6 +139,7 @@ export default function CreateQR() {
         logoImage: '/logo.png', // Static logo
         eyeRadius: [0, 0, 0, 0], // Square by default
         labelText: 'Trace-it',
+        borderColor: '#8B0000', // Default Deep Red
     });
 
     // Determine preview value
@@ -440,66 +474,86 @@ export default function CreateQR() {
 
                         </div>
 
-                        {/* Design Customization */}
-                        <div className={styles.advancedSection}>
-                            <h3>Design Customization</h3>
+                        {/* Design Customization - Only for Admins */}
+                        {isAdmin && (
+                            <div className={styles.advancedSection}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                                    <ShieldCheck size={18} color="#6366f1" />
+                                    <h3 style={{ margin: 0 }}>Admin Design Controls</h3>
+                                </div>
 
-                            <div className={styles.colorSection}>
+                                <div className={styles.colorSection}>
+                                    <div className={styles.section}>
+                                        <label>Foreground Color</label>
+                                        <input
+                                            type="color"
+                                            className={styles.colorInput}
+                                            value={qrStyle.fgColor}
+                                            onChange={e => setQrStyle({ ...qrStyle, fgColor: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className={styles.section}>
+                                        <label>Background Color</label>
+                                        <input
+                                            type="color"
+                                            className={styles.colorInput}
+                                            value={qrStyle.bgColor}
+                                            onChange={e => setQrStyle({ ...qrStyle, bgColor: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className={styles.section}>
-                                    <label>Foreground Color</label>
+                                    <label>Border / Label Color</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <input
+                                            type="color"
+                                            className={styles.colorInput}
+                                            value={qrStyle.borderColor || '#8B0000'}
+                                            onChange={e => setQrStyle({ ...qrStyle, borderColor: e.target.value })}
+                                        />
+                                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                            Controls the frame and text label background
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Logo URL input removed for static image */}
+
+                                <div className={styles.section}>
+                                    <label>Label Text (Below QR)</label>
                                     <input
-                                        type="color"
-                                        className={styles.colorInput}
-                                        value={qrStyle.fgColor}
-                                        onChange={e => setQrStyle({ ...qrStyle, fgColor: e.target.value })}
+                                        type="text"
+                                        value={qrStyle.labelText}
+                                        onChange={(e) => setQrStyle({ ...qrStyle, labelText: e.target.value })}
+                                        placeholder="e.g. Trace-it"
+                                        className={styles.input}
                                     />
                                 </div>
+
                                 <div className={styles.section}>
-                                    <label>Background Color</label>
-                                    <input
-                                        type="color"
-                                        className={styles.colorInput}
-                                        value={qrStyle.bgColor}
-                                        onChange={e => setQrStyle({ ...qrStyle, bgColor: e.target.value })}
-                                    />
+                                    <label>Corner Style</label>
+                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setQrStyle({ ...qrStyle, eyeRadius: [0, 0, 0, 0] })}
+                                            className={`${styles.tab} ${qrStyle.eyeRadius[0] === 0 ? styles.activeTab : ''}`}
+                                            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                                        >
+                                            Square
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setQrStyle({ ...qrStyle, eyeRadius: [10, 10, 10, 10] })}
+                                            className={`${styles.tab} ${qrStyle.eyeRadius[0] > 0 ? styles.activeTab : ''}`}
+                                            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                                        >
+                                            Rounded
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-
-                            {/* Logo URL input removed for static image */}
-
-                            <div className={styles.section}>
-                                <label>Label Text (Below QR)</label>
-                                <input
-                                    type="text"
-                                    value={qrStyle.labelText}
-                                    onChange={(e) => setQrStyle({ ...qrStyle, labelText: e.target.value })}
-                                    placeholder="e.g. Trace-it"
-                                    className={styles.input}
-                                />
-                            </div>
-
-                            <div className={styles.section}>
-                                <label>Corner Style</label>
-                                <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <button
-                                        type="button"
-                                        onClick={() => setQrStyle({ ...qrStyle, eyeRadius: [0, 0, 0, 0] })}
-                                        className={`${styles.tab} ${qrStyle.eyeRadius[0] === 0 ? styles.activeTab : ''}`}
-                                        style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
-                                    >
-                                        Square
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setQrStyle({ ...qrStyle, eyeRadius: [10, 10, 10, 10] })}
-                                        className={`${styles.tab} ${qrStyle.eyeRadius[0] > 0 ? styles.activeTab : ''}`}
-                                        style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
-                                    >
-                                        Rounded
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        )}
 
                         <button type="submit" className={styles.submitBtn} disabled={loading}>
                             <Save size={20} /> {loading ? 'Creating...' : 'Create QR Code'}
