@@ -66,13 +66,10 @@ export default function LoginPage() {
                             <div className="space-y-1">
                                 <label className="text-xs font-medium text-white/70 ml-1 uppercase tracking-wider">Email</label>
                                 <div className="relative group/input">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-white/30 group-focus-within/input:text-[#c09f80] transition-colors" />
-                                    </div>
                                     <input
                                         type="email"
                                         required
-                                        className="w-full pl-16 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#c09f80]/50 focus:border-[#c09f80]/50 transition-all duration-200"
+                                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#c09f80]/50 focus:border-[#c09f80]/50 transition-all duration-200"
                                         placeholder="name@company.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -83,13 +80,10 @@ export default function LoginPage() {
                             <div className="space-y-1">
                                 <label className="text-xs font-medium text-white/70 ml-1 uppercase tracking-wider">Password</label>
                                 <div className="relative group/input">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-white/30 group-focus-within/input:text-[#c09f80] transition-colors" />
-                                    </div>
                                     <input
                                         type="password"
                                         required
-                                        className="w-full pl-16 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#c09f80]/50 focus:border-[#c09f80]/50 transition-all duration-200"
+                                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#c09f80]/50 focus:border-[#c09f80]/50 transition-all duration-200"
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
