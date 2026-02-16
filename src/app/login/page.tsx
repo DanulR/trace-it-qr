@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -48,25 +47,9 @@ export default function LoginPage() {
                     {/* Glassmorphism Card */}
                     <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8 overflow-hidden transition-all duration-300 hover:border-white/20 hover:bg-white/10">
 
-                        {/* Shimmer Effect */}
-                        <div className="absolute inset-0 -translate-x-[200%] animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none"></div>
-
                         <div className="flex flex-col items-center mb-8">
                             <div className="w-20 h-20 bg-white/10 rounded-2xl flex items-center justify-center mb-4 shadow-inner ring-1 ring-white/20">
-                                {/* Use Logo Image if available, otherwise fallback to Icon */}
-                                <Image
-                                    src="/logo.png"
-                                    alt="Logo"
-                                    width={50}
-                                    height={50}
-                                    className="object-contain"
-                                    onError={(e) => {
-                                        // Fallback if image fails
-                                        e.currentTarget.style.display = 'none';
-                                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                                    }}
-                                />
-                                <Lock className="hidden text-[#c09f80]" size={32} />
+                                <Lock className="text-[#c09f80]" size={32} />
                             </div>
                             <h1 className="text-3xl font-bold text-white tracking-tight">Welcome Back</h1>
                             <p className="text-white/50 text-sm mt-2">Sign in to access your dashboard</p>
