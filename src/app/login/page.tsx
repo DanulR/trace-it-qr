@@ -44,8 +44,8 @@ export default function LoginPage() {
 
             <div className="w-full max-w-md z-10 p-4">
                 <div className="relative group">
-                    {/* Glassmorphism Card */}
-                    <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8 overflow-hidden transition-all duration-300 hover:border-white/20 hover:bg-white/10">
+                    {/* Minimalist Container */}
+                    <div className="relative p-8">
 
                         <div className="flex flex-col items-center mb-8">
                             <div className="w-20 h-20 bg-white/10 rounded-2xl flex items-center justify-center mb-4 shadow-inner ring-1 ring-white/20">
@@ -72,7 +72,7 @@ export default function LoginPage() {
                                     <input
                                         type="email"
                                         required
-                                        className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#c09f80]/50 focus:border-[#c09f80]/50 transition-all duration-200"
+                                        className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#c09f80]/50 focus:border-[#c09f80]/50 transition-all duration-200"
                                         placeholder="name@company.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -89,7 +89,7 @@ export default function LoginPage() {
                                     <input
                                         type="password"
                                         required
-                                        className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#c09f80]/50 focus:border-[#c09f80]/50 transition-all duration-200"
+                                        className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#c09f80]/50 focus:border-[#c09f80]/50 transition-all duration-200"
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
