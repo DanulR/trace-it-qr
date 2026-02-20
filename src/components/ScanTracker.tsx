@@ -187,7 +187,7 @@ export default function ScanTracker({
                                             display: 'block',
                                             width: '100%',
                                             backgroundColor: 'var(--foreground)',
-                                            color: 'white',
+                                            color: 'var(--background)',
                                             textAlign: 'center',
                                             padding: '1rem',
                                             borderRadius: '0.5rem',
