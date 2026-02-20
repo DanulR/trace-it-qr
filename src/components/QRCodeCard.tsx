@@ -26,7 +26,18 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
     const [showMenu, setShowMenu] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(qr.title);
-    const [editUrl, setEditUrl] = useState(qr.destination_url || '');
+
+    const initialUrls = (() => {
+        if (!qr.destination_url) return [''];
+        try {
+            const parsed = JSON.parse(qr.destination_url);
+            if (Array.isArray(parsed)) return parsed.length ? parsed : [''];
+            return [qr.destination_url];
+        } catch {
+            return [qr.destination_url];
+        }
+    })();
+    const [editUrls, setEditUrls] = useState<string[]>(initialUrls);
     const [isSaving, setIsSaving] = useState(false);
 
     const menuRef = useRef<HTMLDivElement>(null);
@@ -52,7 +63,15 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            await onUpdate(qr, editTitle, qr.type === 'link' ? editUrl : undefined);
+            const validUrls = editUrls.filter(u => u.trim() !== '');
+            let finalUrlToSave = '';
+            if (validUrls.length > 1) {
+                finalUrlToSave = JSON.stringify(validUrls);
+            } else if (validUrls.length === 1) {
+                finalUrlToSave = validUrls[0];
+            }
+
+            await onUpdate(qr, editTitle, qr.type === 'link' ? finalUrlToSave : undefined);
             setIsEditing(false);
         } catch (e) {
             console.error(e);
@@ -64,7 +83,19 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
 
     const handleCancel = () => {
         setEditTitle(qr.title);
-        setEditUrl(qr.destination_url || '');
+
+        const resetUrls = (() => {
+            if (!qr.destination_url) return [''];
+            try {
+                const parsed = JSON.parse(qr.destination_url);
+                if (Array.isArray(parsed)) return parsed.length ? parsed : [''];
+                return [qr.destination_url];
+            } catch {
+                return [qr.destination_url];
+            }
+        })();
+        setEditUrls(resetUrls);
+
         setIsEditing(false);
     }
 
@@ -88,13 +119,46 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
 
                     {qr.type === 'link' && (
                         <>
-                            <label style={{ fontSize: '0.75rem', color: '#64748b' }}>Destination URL</label>
-                            <input
-                                type="url"
-                                value={editUrl}
-                                onChange={(e) => setEditUrl(e.target.value)}
-                                style={{ width: '100%', padding: '0.4rem', border: '1px solid #e2e8f0', borderRadius: '4px' }}
-                            />
+                            <label style={{ fontSize: '0.75rem', color: '#64748b' }}>Destination URLs</label>
+                            {editUrls.map((url, index) => (
+                                <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                                    <input
+                                        type="url"
+                                        value={url}
+                                        onChange={(e) => {
+                                            const newUrls = [...editUrls];
+                                            newUrls[index] = e.target.value;
+                                            setEditUrls(newUrls);
+                                        }}
+                                        style={{ flex: 1, padding: '0.4rem', border: '1px solid #e2e8f0', borderRadius: '4px', width: '100%' }}
+                                        placeholder="https://..."
+                                    />
+                                    {editUrls.length > 1 && (
+                                        <button
+                                            onClick={() => setEditUrls(editUrls.filter((_, i) => i !== index))}
+                                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0 4px' }}
+                                            title="Remove URL"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                            <button
+                                onClick={() => setEditUrls([...editUrls, ''])}
+                                style={{
+                                    fontSize: '0.75rem',
+                                    color: '#6366f1',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    padding: '0',
+                                    marginTop: '0.2rem'
+                                }}
+                            >
+                                + Add another URL
+                            </button>
                         </>
                     )}
                 </div>

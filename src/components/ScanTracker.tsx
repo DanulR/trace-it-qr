@@ -162,26 +162,44 @@ export default function ScanTracker({
                         </div>
 
                         <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--border)' }}>
-                            {destinationUrl && (
-                                <a
-                                    href={destinationUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        display: 'block',
-                                        width: '100%',
-                                        backgroundColor: 'var(--foreground)',
-                                        color: 'white',
-                                        textAlign: 'center',
-                                        padding: '1rem',
-                                        borderRadius: '0.5rem',
-                                        textDecoration: 'none',
-                                        fontWeight: '600'
-                                    }}
-                                >
-                                    View Original Content
-                                </a>
-                            )}
+                            {(() => {
+                                let urls: string[] = [];
+                                if (destinationUrl) {
+                                    try {
+                                        const parsed = JSON.parse(destinationUrl);
+                                        if (Array.isArray(parsed)) {
+                                            urls = parsed;
+                                        } else {
+                                            urls = [destinationUrl];
+                                        }
+                                    } catch (e) {
+                                        urls = [destinationUrl];
+                                    }
+                                }
+
+                                return urls.map((url, index) => (
+                                    <a
+                                        key={index}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            display: 'block',
+                                            width: '100%',
+                                            backgroundColor: 'var(--foreground)',
+                                            color: 'white',
+                                            textAlign: 'center',
+                                            padding: '1rem',
+                                            borderRadius: '0.5rem',
+                                            textDecoration: 'none',
+                                            fontWeight: '600',
+                                            marginBottom: '0.5rem'
+                                        }}
+                                    >
+                                        {urls.length > 1 ? `View Original Content ${index + 1}` : 'View Original Content'}
+                                    </a>
+                                ));
+                            })()}
                             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>
                                 You will be redirected to the external source.
                             </p>
