@@ -220,8 +220,24 @@ export async function getFolders() {
     .select('*')
     .order('created_at', { ascending: true });
 
-  if (error) return [];
-  return data as Folder[];
+  let results = data as Folder[] || [];
+
+  if (error) {
+    results = [];
+  }
+
+  // Ensure "General" folder is always present for UI
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user && !results.some(f => f.name === 'General')) {
+    results.unshift({
+      id: 'general-folder-id',
+      name: 'General',
+      user_id: user.id,
+      created_at: new Date().toISOString()
+    });
+  }
+
+  return results;
 }
 
 export async function deleteFolder(name: string) {
