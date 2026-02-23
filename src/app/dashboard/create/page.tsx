@@ -237,7 +237,7 @@ export default function CreateQR() {
 
             if (res.ok) {
                 const data = await res.json();
-                alert(`Successfully created ${data.count} QR codes in "${data.folder}"`);
+                // Removed alert for smoother UX
                 router.push('/dashboard');
                 router.refresh();
             } else {

@@ -36,9 +36,7 @@ export default async function DashboardLayout({
                     <Link href="/dashboard/folders" className={styles.navItem}>
                         <FolderOpen size={20} /> Folders
                     </Link>
-                    <Link href="/dashboard/domains" className={styles.navItem}>
-                        <Settings size={20} /> Domains
-                    </Link>
+
                 </nav>
 
                 <div className={styles.footer}>
