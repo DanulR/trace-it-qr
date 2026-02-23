@@ -170,10 +170,12 @@ export default function CreateQR() {
 
         const finalDestinationUrl = JSON.stringify(sourceUrls.filter(u => u.trim() !== ''));
 
+        const targetFolder = isCreatingFolder && newFolderName.trim() ? newFolderName.trim() : folder;
+
         const payload = {
             type: mode,
             title: autoTitle, // internal name is now auto-generated
-            folder,
+            folder: targetFolder,
             custom_domain: undefined,
             organization: undefined,
             content_category: contentCategory,

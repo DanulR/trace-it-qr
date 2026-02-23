@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createQRCode, getAllQRCodes, initDB } from '@/lib/db';
+import { createQRCode, getAllQRCodes, initDB, createFolder, getFolders } from '@/lib/db';
 import { nanoid } from 'nanoid';
 import crypto from 'crypto';
 
@@ -36,8 +36,27 @@ export async function POST(request: Request) {
         if (type === 'verified_content') {
             verification_hash = crypto.createHash('sha256').update(id + title + new Date().toISOString()).digest('hex').substring(0, 16);
         }
+        const targetFolder = folder?.trim() || 'General';
 
-        console.log('[API] About to call createQRCode with:', { id, type, title });
+        // Ensure folder exists
+        const existingFolders = await getFolders();
+        const folderExists = existingFolders.some((f: any) => f.name === targetFolder);
+
+        if (!folderExists && targetFolder !== 'General') {
+            try {
+                await createFolder(targetFolder);
+            } catch (e: any) {
+                if (
+                    !e.message?.includes('UNIQUE') &&
+                    !e.message?.includes('violates unique constraint') &&
+                    e.code !== '23505'
+                ) {
+                    throw e;
+                }
+            }
+        }
+
+        console.log('[API] About to call createQRCode with:', { id, type, title, folder: targetFolder });
 
         await createQRCode({
             id,
@@ -45,7 +64,7 @@ export async function POST(request: Request) {
             title,
             destination_url,
             landing_content: landing_content ? JSON.stringify(landing_content) : undefined,
-            folder: folder || 'General',
+            folder: targetFolder,
             custom_domain,
             organization,
             content_category,
