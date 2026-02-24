@@ -56,6 +56,34 @@ export async function POST(request: Request) {
             }
         }
 
+        // Fetch user metadata to enforce locked styles
+        let finalStyle = style;
+        try {
+            const { createClient } = await import('@/lib/supabase/server');
+            const supabase = await createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user && user.user_metadata?.style) {
+                const userStyle = user.user_metadata.style;
+                const loadedStyle = { ...userStyle };
+
+                // Handle simplified "cornerStyle" property
+                if (userStyle.cornerStyle === 'rounded') {
+                    loadedStyle.eyeRadius = [10, 10, 10, 10];
+                } else if (userStyle.cornerStyle === 'square') {
+                    loadedStyle.eyeRadius = [0, 0, 0, 0];
+                }
+
+                // Merge frontend styles with backend enforced styles (backend wins)
+                finalStyle = {
+                    ...(style || {}),
+                    ...loadedStyle
+                };
+            }
+        } catch (e) {
+            console.error('[API] Failed to fetch user metadata for style enforcement', e);
+        }
+
         console.log('[API] About to call createQRCode with:', { id, type, title, folder: targetFolder });
 
         await createQRCode({
@@ -69,7 +97,7 @@ export async function POST(request: Request) {
             organization,
             content_category,
             verification_hash,
-            style: style ? JSON.stringify(style) : undefined
+            style: finalStyle ? JSON.stringify(finalStyle) : undefined
         });
 
         console.log('[API] QR Code created successfully');

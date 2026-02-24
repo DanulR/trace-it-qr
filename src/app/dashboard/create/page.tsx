@@ -139,7 +139,7 @@ export default function CreateQR() {
         logoImage: '/logo.png', // Static logo
         eyeRadius: [0, 0, 0, 0], // Square by default
         labelText: 'Trace-it',
-        borderColor: '#8B0000', // Default Deep Red
+        borderColor: '#8b0000', // Default Deep Red
     });
 
     // Determine preview value

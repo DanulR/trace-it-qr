@@ -42,6 +42,37 @@ export async function POST(request: Request) {
         const createdIds = [];
         const timestamp = new Date().toLocaleString();
 
+        // Fetch user metadata to enforce locked styles
+        let baseStyle = {
+            fgColor: '#000000',
+            bgColor: '#ffffff',
+            logoImage: '/logo.png',
+            eyeRadius: [0, 0, 0, 0],
+            labelText: 'Trace-it',
+            borderColor: '#8b0000'
+        };
+
+        try {
+            const { createClient } = await import('@/lib/supabase/server');
+            const supabase = await createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user && user.user_metadata?.style) {
+                const userStyle = user.user_metadata.style;
+                const loadedStyle = { ...userStyle };
+
+                if (userStyle.cornerStyle === 'rounded') {
+                    loadedStyle.eyeRadius = [10, 10, 10, 10];
+                } else if (userStyle.cornerStyle === 'square') {
+                    loadedStyle.eyeRadius = [0, 0, 0, 0];
+                }
+
+                baseStyle = { ...baseStyle, ...loadedStyle };
+            }
+        } catch (e) {
+            console.error('[API] Failed to fetch user metadata for bulk style enforcement', e);
+        }
+
         // We'll run these sequentially to avoid overwhelming SQLite/Turso with parallel requests if count is high
         for (let i = 0; i < count; i++) {
             const id = nanoid(6);
@@ -51,15 +82,9 @@ export async function POST(request: Request) {
                 id,
                 type: 'link', // Default type
                 title: title,
-                destination_url: '', // Empty initially? Or should we ask? User said "number of qr codes and the folder name only"
+                destination_url: '',
                 folder: folderName,
-                style: JSON.stringify({
-                    fgColor: '#000000',
-                    bgColor: '#ffffff',
-                    logoImage: '/logo.png',
-                    eyeRadius: [0, 0, 0, 0],
-                    labelText: 'Trace-it'
-                })
+                style: JSON.stringify(baseStyle)
             });
             createdIds.push(id);
         }
