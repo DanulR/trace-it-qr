@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { ExternalLink, QrCode, BarChart2, Calendar, FolderInput, Edit2, X, Check, Folder as FolderIcon } from 'lucide-react';
+import { ExternalLink, QrCode, BarChart2, Calendar, FolderInput, Edit2, X, Check, Folder as FolderIcon, Image as ImageIcon } from 'lucide-react';
 import styles from './QRCodeCard.module.css';
 import { QRCodeData } from '@/lib/db';
 import { Folder } from '@/lib/db'; // Make sure Folder type is exported or define it here
@@ -19,10 +19,11 @@ interface QRCodeCardProps {
     onDownload: (qr: QRCodeData) => void;
     onMove: (qr: QRCodeData, folderName: string) => void;
     onUpdate: (qr: QRCodeData, newTitle: string, newUrl?: string) => Promise<void>;
+    onEmbed?: (qr: QRCodeData, file: File) => void;
     folders: FolderType[];
 }
 
-export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, onUpdate, folders }) => {
+export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, onUpdate, onEmbed, folders }) => {
     const [showMenu, setShowMenu] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(qr.title);
@@ -41,6 +42,16 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
     const [isSaving, setIsSaving] = useState(false);
 
     const menuRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedEmbedFile, setSelectedEmbedFile] = useState<File | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedEmbedFile(file);
+        }
+        // Don't reset right away so we know a file is selected
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -184,89 +195,149 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ qr, onDownload, onMove, 
 
             </div>
 
-            <h3 className={styles.cardTitle}>{qr.title}</h3>
-            <div className={styles.cardUrl} style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', marginBottom: '0.25rem' }}>
+                <h3 className={styles.cardTitle} style={{ marginBottom: 0 }}>{qr.title}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>
+                    <Calendar size={12} style={{ marginRight: '4px' }} />
+                    {new Date(qr.created_at).toLocaleDateString()}
+                </div>
+            </div>
+
+            <div className={styles.cardUrl} style={{ overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '1rem' }}>
                 {qr.type === 'link' ? qr.destination_url : (qr.type === 'verified_content' ? 'Verified Content' : 'Custom Landing Page')}
             </div>
 
-            <div className={styles.cardStats}>
-                <div className={styles.stat}>
+            <div className={styles.cardStats} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#64748b', fontSize: '0.8rem' }}>
                     <BarChart2 size={14} /> {qr.scans} scans
                 </div>
-                <div className={styles.stat} style={{ display: 'flex', alignItems: 'center' }}>
-                    <Calendar size={14} style={{ marginRight: '4px' }} />
-                    {new Date(qr.created_at).toLocaleDateString()}
+                <button
+                    onClick={() => setIsEditing(true)}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#6366f1',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '2px',
+                        borderRadius: '4px'
+                    }}
+                    title="Edit Name/URL"
+                >
+                    <Edit2 size={14} />
+                </button>
+
+                {/* Folder Move Button */}
+                <div style={{ position: 'relative' }} ref={menuRef}>
                     <button
-                        onClick={() => setIsEditing(true)}
+                        onClick={() => setShowMenu(!showMenu)}
                         style={{
                             background: 'none',
                             border: 'none',
                             cursor: 'pointer',
-                            color: '#6366f1',
+                            color: '#64748b',
                             display: 'flex',
                             alignItems: 'center',
-                            marginLeft: '8px',
+                            gap: '2px',
+                            fontSize: '0.8rem',
                             padding: '2px',
-                            borderRadius: '4px'
                         }}
-                        title="Edit"
+                        title="Move to Folder"
                     >
-                        <Edit2 size={14} />
+                        <FolderIcon size={14} />
+                        <span>{qr.folder || 'General'}</span>
                     </button>
-                    {/* Folder Move Button */}
-                    <div style={{ position: 'relative', marginLeft: '8px' }} ref={menuRef}>
+                    {showMenu && (
+                        <div className={styles.dropdown} style={{ right: 'auto', left: 0, top: '100%', marginTop: '4px' }}>
+                            <div style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                                Move to Folder
+                            </div>
+                            {folders.length === 0 ? (
+                                <div style={{ padding: '0.5rem', fontSize: '0.8rem', color: '#64748b' }}>No folders</div>
+                            ) : (
+                                folders.map(f => (
+                                    <button
+                                        key={f.id}
+                                        className={styles.dropdownItem}
+                                        onClick={() => handleMove(f.name)}
+                                        disabled={qr.folder === f.name}
+                                        style={{ opacity: qr.folder === f.name ? 0.5 : 1 }}
+                                    >
+                                        {f.name}
+                                    </button>
+                                ))
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Embed Image Button */}
+                {onEmbed && (
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                        />
                         <button
-                            onClick={() => setShowMenu(!showMenu)}
+                            onClick={() => fileInputRef.current?.click()}
                             style={{
-                                background: 'none',
+                                background: selectedEmbedFile ? '#e0e7ff' : 'none',
                                 border: 'none',
                                 cursor: 'pointer',
-                                color: '#64748b',
+                                color: selectedEmbedFile ? '#4f46e5' : '#64748b',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '4px',
-                                fontSize: '0.8rem',
-                                padding: '2px',
+                                padding: '2px 4px',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                whiteSpace: 'nowrap',
+                                fontWeight: selectedEmbedFile ? 500 : 'normal'
                             }}
-                            title="Move to Folder"
+                            title={selectedEmbedFile ? `Selected: ${selectedEmbedFile.name}` : "Add Infographic Background"}
                         >
-                            <FolderIcon size={14} />
-                            <span>{qr.folder || 'General'}</span>
+                            <ImageIcon size={14} />
+                            <span>{selectedEmbedFile ? 'Loaded' : 'Embed'}</span>
+                            {selectedEmbedFile && <Check size={12} />}
                         </button>
-                        {showMenu && (
-                            <div className={styles.dropdown} style={{ right: 'auto', left: 0, top: '100%', marginTop: '4px' }}>
-                                <div style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
-                                    Move to Folder
-                                </div>
-                                {folders.length === 0 ? (
-                                    <div style={{ padding: '0.5rem', fontSize: '0.8rem', color: '#64748b' }}>No folders</div>
-                                ) : (
-                                    folders.map(f => (
-                                        <button
-                                            key={f.id}
-                                            className={styles.dropdownItem}
-                                            onClick={() => handleMove(f.name)}
-                                            disabled={qr.folder === f.name}
-                                            style={{ opacity: qr.folder === f.name ? 0.5 : 1 }}
-                                        >
-                                            {f.name}
-                                        </button>
-                                    ))
-                                )}
-                            </div>
-                        )}
                     </div>
-                </div>
-
+                )}
             </div>
 
             <div className={styles.cardActions}>
                 <Link href={`/${qr.id}?preview=true`} target="_blank" className={styles.actionLink}>
                     <ExternalLink size={14} /> View
                 </Link>
+                {onEmbed && (
+                    <button
+                        className={styles.downloadBtn}
+                        style={{
+                            opacity: selectedEmbedFile ? 1 : 0.6,
+                            cursor: selectedEmbedFile ? 'pointer' : 'not-allowed',
+                            background: selectedEmbedFile ? '#1e293b' : undefined,
+                            color: selectedEmbedFile ? 'white' : undefined,
+                        }}
+                        onClick={() => {
+                            if (selectedEmbedFile) {
+                                onEmbed(qr, selectedEmbedFile);
+                            } else {
+                                alert("Please add an image first using the icon next to the folder name.");
+                                fileInputRef.current?.click();
+                            }
+                        }}
+                        title="Download Embedded Image"
+                    >
+                        <ImageIcon size={14} /> Embedded
+                    </button>
+                )}
                 <button
                     className={styles.downloadBtn}
                     onClick={() => onDownload(qr)}
+                    title="Download PNG"
                 >
                     <QrCode size={14} /> PNG
                 </button>

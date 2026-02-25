@@ -13,6 +13,7 @@ import styles from './page.module.css'; // We'll create this or reuse dashboard 
 import { QRCodeCard } from '@/components/QRCodeCard';
 import { QRCodeData, Folder } from '@/lib/db';
 import { QRCodePreview, QRStyle } from '@/components/QRCodePreview';
+import { createQRCompositeCanvas } from '@/lib/qr-canvas';
 
 // Duplicate basic types if needed or import
 export default function FolderViewPage({ params }: { params: Promise<{ name: string }> }) {
@@ -20,6 +21,7 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
     const [folders, setFolders] = useState<Folder[]>([]);
     const [loading, setLoading] = useState(true);
     const [downloadItem, setDownloadItem] = useState<{ item: QRCodeData, style: QRStyle } | null>(null);
+    const [embedItem, setEmbedItem] = useState<{ item: QRCodeData, style: QRStyle, file: File } | null>(null);
     // State to hold the unwrapped param
     const [folderName, setFolderName] = useState<string>('');
     const router = useRouter();
@@ -53,112 +55,90 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
         const timer = setTimeout(() => {
             const qrCanvas = document.getElementById('qr-download-canvas') as HTMLCanvasElement;
             if (qrCanvas) {
-                const finalCanvas = document.createElement('canvas');
-                const ctx = finalCanvas.getContext('2d');
-                if (ctx) {
-                    const padding = 100;
-                    const labelFontSize = 72;
-                    // ... (rest of the detailed canvas drawing logic) ...
-                    // For brevity in this thought process, I will simplify or try to extract it?
-                    // The user wants it "functional", not necessarily perfect clean code immediately.
-                    // Copy-paste is safe.
-                    // Actually, I should have extracted this fast logic.
-                    // I will replicate the exact logic to ensure consistency.
-
-                    const boxPaddingY = 32;
-                    const labelBoxHeight = labelFontSize + (boxPaddingY * 2);
-                    const brandColor = '#8B0000';
-                    const borderPadding = 20;
-                    const borderRadius = 40;
-                    const borderThickness = 12;
-                    const spaceBetweenBorderAndLabel = 30;
-
-                    const borderH = qrCanvas.height + (borderPadding * 2);
-                    const totalContentHeight = (padding - borderPadding) + borderH + spaceBetweenBorderAndLabel + labelBoxHeight + 40;
-
-                    finalCanvas.width = qrCanvas.width + (padding * 2);
-                    finalCanvas.height = downloadItem.style.labelText
-                        ? Math.max(qrCanvas.height + (padding * 2), totalContentHeight)
-                        : qrCanvas.height + (padding * 2);
-
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-                    ctx.drawImage(qrCanvas, padding, padding);
-
-                    if (downloadItem.style.labelText) {
-                        ctx.strokeStyle = brandColor;
-                        ctx.lineWidth = borderThickness;
-                        const borderX = padding - borderPadding;
-                        const borderY = padding - borderPadding;
-                        const borderW = qrCanvas.width + (borderPadding * 2);
-
-                        // Rounded rect border (simplified path for speed if slightly different, but let's try to match)
-                        ctx.beginPath();
-                        ctx.moveTo(borderX + borderRadius, borderY);
-                        ctx.lineTo(borderX + borderW - borderRadius, borderY);
-                        ctx.quadraticCurveTo(borderX + borderW, borderY, borderX + borderW, borderY + borderRadius);
-                        ctx.lineTo(borderX + borderW, borderY + borderH - borderRadius);
-                        ctx.quadraticCurveTo(borderX + borderW, borderY + borderH, borderX + borderW - borderRadius, borderY + borderH);
-                        ctx.lineTo(borderX + borderRadius, borderY + borderH);
-                        ctx.quadraticCurveTo(borderX, borderY + borderH, borderX, borderY + borderH - borderRadius);
-                        ctx.lineTo(borderX, borderY + borderRadius);
-                        ctx.quadraticCurveTo(borderX, borderY, borderX + borderRadius, borderY);
-                        ctx.closePath();
-                        ctx.stroke();
-
-                        // Label Bubble
-                        const centerX = finalCanvas.width / 2;
-                        const labelY = borderY + borderH + spaceBetweenBorderAndLabel;
-                        ctx.font = `bold ${labelFontSize}px sans-serif`;
-                        const textMetrics = ctx.measureText(downloadItem.style.labelText);
-                        const textWidth = textMetrics.width;
-                        const boxPaddingX = 60;
-                        const boxWidth = textWidth + (boxPaddingX * 2);
-                        const boxHeight = labelBoxHeight;
-                        const radius = 40;
-                        const x = centerX - (boxWidth / 2);
-                        const y = labelY;
-
-                        ctx.fillStyle = brandColor;
-                        ctx.beginPath();
-                        ctx.moveTo(x + radius, y);
-                        ctx.lineTo(x + boxWidth - radius, y);
-                        ctx.quadraticCurveTo(x + boxWidth, y, x + boxWidth, y + radius);
-                        ctx.lineTo(x + boxWidth, y + boxHeight - radius);
-                        ctx.quadraticCurveTo(x + boxWidth, y + boxHeight, x + boxWidth - radius, y + boxHeight);
-                        ctx.lineTo(x + radius, y + boxHeight);
-                        ctx.quadraticCurveTo(x, y + boxHeight, x, y + boxHeight - radius);
-                        ctx.lineTo(x, y + radius);
-                        ctx.quadraticCurveTo(x, y, x + radius, y);
-                        ctx.closePath();
-                        ctx.fill();
-
-                        const pointerWidth = 60;
-                        ctx.beginPath();
-                        ctx.moveTo(centerX - (pointerWidth / 2), y + 2);
-                        ctx.lineTo(centerX, borderY + borderH - (borderThickness / 2) + 2);
-                        ctx.lineTo(centerX + (pointerWidth / 2), y + 2);
-                        ctx.closePath();
-                        ctx.fill();
-
-                        ctx.fillStyle = '#ffffff';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(downloadItem.style.labelText, centerX, y + (boxHeight / 2) + 4);
-                    }
-
-                    const link = document.createElement('a');
-                    link.download = `${downloadItem.item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_qr.png`;
-                    link.href = finalCanvas.toDataURL('image/png');
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                let styleObj: QRStyle;
+                if (downloadItem.style) {
+                    styleObj = typeof downloadItem.style === 'string' ? JSON.parse(downloadItem.style) : downloadItem.style as any;
+                } else {
+                    styleObj = { labelText: '', fgColor: '#000', bgColor: '#fff', eyeRadius: [0, 0, 0, 0], logoImage: '' };
                 }
+
+                const compositeCanvas = createQRCompositeCanvas(qrCanvas, styleObj, 100);
+
+                const link = document.createElement('a');
+                link.download = `${downloadItem.item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_qr.png`;
+                link.href = compositeCanvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
             setDownloadItem(null);
         }, 500);
         return () => clearTimeout(timer);
     }, [downloadItem]);
+
+    // Handle embed effect
+    useEffect(() => {
+        if (!embedItem) return;
+
+        const timer = setTimeout(() => {
+            const qrCanvas = document.getElementById('qr-embed-canvas') as HTMLCanvasElement;
+            if (qrCanvas) {
+                let styleObj: QRStyle;
+                if (embedItem.style) {
+                    styleObj = typeof embedItem.style === 'string' ? JSON.parse(embedItem.style) : embedItem.style as any;
+                } else {
+                    styleObj = { labelText: '', fgColor: '#000', bgColor: '#fff', eyeRadius: [0, 0, 0, 0], logoImage: '' };
+                }
+
+                const compositeCanvas = createQRCompositeCanvas(qrCanvas, styleObj, 40);
+
+                const img = new Image();
+                img.onload = () => {
+                    const finalCanvas = document.createElement('canvas');
+                    finalCanvas.width = img.width;
+                    finalCanvas.height = img.height;
+                    const ctx = finalCanvas.getContext('2d');
+                    if (ctx) {
+                        ctx.drawImage(img, 0, 0);
+
+                        let targetQRWidth = img.width * 0.15;
+                        if (targetQRWidth < 150) targetQRWidth = 150;
+                        if (targetQRWidth > img.width / 2) targetQRWidth = img.width / 2;
+
+                        const scale = targetQRWidth / compositeCanvas.width;
+                        const targetQRHeight = compositeCanvas.height * scale;
+
+                        const padding = targetQRWidth * 0.1;
+                        const x = img.width - targetQRWidth - padding;
+                        const y = img.height - targetQRHeight - padding;
+
+                        // Add drop shadow
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                        ctx.shadowBlur = 10;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 4;
+
+                        ctx.drawImage(compositeCanvas, x, y, targetQRWidth, targetQRHeight);
+
+                        const link = document.createElement('a');
+                        const ext = embedItem.file.name.split('.').pop() || 'png';
+                        link.download = `${embedItem.item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_infographic.${ext}`;
+                        link.href = finalCanvas.toDataURL(`image/${ext === 'jpg' ? 'jpeg' : 'png'}`);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                    URL.revokeObjectURL(img.src);
+                    setEmbedItem(null);
+                };
+                img.src = URL.createObjectURL(embedItem.file);
+            } else {
+                setEmbedItem(null);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [embedItem]);
 
 
     const prepareDownload = (item: QRCodeData) => {
@@ -173,6 +153,20 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
             try { style = JSON.parse(item.style); } catch (e) { console.error("Failed to parse style", e); }
         }
         setDownloadItem({ item, style });
+    };
+
+    const prepareEmbed = (item: QRCodeData, file: File) => {
+        let style: QRStyle = {
+            fgColor: '#000000',
+            bgColor: '#ffffff',
+            logoImage: '',
+            eyeRadius: [0, 0, 0, 0],
+            labelText: ''
+        };
+        if (item.style) {
+            try { style = JSON.parse(item.style); } catch (e) { console.error("Failed to parse style", e); }
+        }
+        setEmbedItem({ item, style, file });
     };
 
     const getUrl = (qr: QRCodeData) => `${window.location.origin}/${qr.id}`;
@@ -246,6 +240,14 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
                         size={1000}
                     />
                 )}
+                {embedItem && (
+                    <QRCodePreview
+                        id="qr-embed-canvas"
+                        value={getUrl(embedItem.item)}
+                        style={embedItem.style}
+                        size={1000}
+                    />
+                )}
             </div>
 
             {loading ? (
@@ -263,6 +265,7 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
                             key={qr.id}
                             qr={qr}
                             onDownload={prepareDownload}
+                            onEmbed={prepareEmbed}
                             onMove={handleMove}
                             onUpdate={handleUpdate}
                             folders={folders}
