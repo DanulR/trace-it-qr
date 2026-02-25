@@ -10,6 +10,8 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [message, setMessage] = useState<string | null>(null);
+    const [isResettingPassword, setIsResettingPassword] = useState(false);
     const router = useRouter();
     const supabase = createClient();
 
@@ -17,15 +19,24 @@ export default function LoginPage() {
         e.preventDefault();
         setLoading(true);
         setError(null);
+        setMessage(null);
 
         try {
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
-            if (error) throw error;
-            router.push('/dashboard');
-            router.refresh();
+            if (isResettingPassword) {
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
+                });
+                if (error) throw error;
+                setMessage('Check your email for the password reset link.');
+            } else {
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+                if (error) throw error;
+                router.push('/dashboard');
+                router.refresh();
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -52,13 +63,22 @@ export default function LoginPage() {
                                 <Lock className="text-[#c09f80]" size={32} />
                             </div>
                             <h1 className="text-3xl font-bold text-white tracking-tight">Welcome Back</h1>
-                            <p className="text-white/50 text-sm mt-2">Sign in to access your dashboard</p>
+                            <p className="text-white/50 text-sm mt-2">
+                                {isResettingPassword ? 'Enter your email to reset your password' : 'Sign in to access your dashboard'}
+                            </p>
                         </div>
 
                         {error && (
                             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-200 rounded-xl text-sm flex items-center gap-3 animate-shake">
                                 <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
                                 {error}
+                            </div>
+                        )}
+
+                        {message && (
+                            <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 text-green-200 rounded-xl text-sm flex items-center gap-3">
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                                {message}
                             </div>
                         )}
 
@@ -77,19 +97,34 @@ export default function LoginPage() {
                                 </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium text-white/70 ml-1 uppercase tracking-wider">Password</label>
-                                <div className="relative group/input">
-                                    <input
-                                        type="password"
-                                        required
-                                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#c09f80]/50 focus:border-[#c09f80]/50 transition-all duration-200"
-                                        placeholder="••••••••"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
+                            {!isResettingPassword && (
+                                <div className="space-y-1">
+                                    <div className="flex justify-between items-center ml-1">
+                                        <label className="text-xs font-medium text-white/70 uppercase tracking-wider">Password</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsResettingPassword(true);
+                                                setError(null);
+                                                setMessage(null);
+                                            }}
+                                            className="text-xs text-[#c09f80] hover:text-[#e0c0a0] transition-colors"
+                                        >
+                                            Forgot password?
+                                        </button>
+                                    </div>
+                                    <div className="relative group/input">
+                                        <input
+                                            type="password"
+                                            required={!isResettingPassword}
+                                            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#c09f80]/50 focus:border-[#c09f80]/50 transition-all duration-200"
+                                            placeholder="••••••••"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <button
                                 type="submit"
@@ -99,11 +134,11 @@ export default function LoginPage() {
                                 {loading ? (
                                     <>
                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                        <span>Signing In...</span>
+                                        <span>{isResettingPassword ? 'Sending...' : 'Signing In...'}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span>Sign In</span>
+                                        <span>{isResettingPassword ? 'Send Reset Link' : 'Sign In'}</span>
                                         <ArrowRight className="w-5 h-5" />
                                     </>
                                 )}
@@ -111,12 +146,27 @@ export default function LoginPage() {
                         </form>
 
                         <div className="mt-8 text-center">
-                            <p className="text-sm text-white/40">
-                                Don't have an account?{' '}
-                                <a href="#" className="text-[#c09f80] hover:text-[#e0c0a0] transition-colors font-medium">
-                                    Contact Support
-                                </a>
-                            </p>
+                            {isResettingPassword ? (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsResettingPassword(false);
+                                        setError(null);
+                                        setMessage(null);
+                                    }}
+                                    className="text-sm text-[#c09f80] hover:text-[#e0c0a0] transition-colors font-medium flex items-center justify-center gap-2 mx-auto"
+                                >
+                                    <ArrowRight className="w-4 h-4 rotate-180" />
+                                    Back to Sign In
+                                </button>
+                            ) : (
+                                <p className="text-sm text-white/40">
+                                    Don't have an account?{' '}
+                                    <a href="#" className="text-[#c09f80] hover:text-[#e0c0a0] transition-colors font-medium">
+                                        Contact Support
+                                    </a>
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
