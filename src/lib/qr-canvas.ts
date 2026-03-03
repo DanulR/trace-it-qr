@@ -11,8 +11,8 @@ export function createQRCompositeCanvas(qrCanvas: HTMLCanvasElement, styleObj: Q
     const ctx = finalCanvas.getContext('2d');
     if (!ctx) return finalCanvas;
 
-    const labelFontSize = 72;
-    const boxPaddingY = 32;
+    const labelFontSize = 96;
+    const boxPaddingY = 40;
     const labelBoxHeight = labelFontSize + (boxPaddingY * 2);
     const brandColor = '#8B0000';
     const borderPadding = 20;
