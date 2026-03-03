@@ -101,9 +101,9 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
                     if (ctx) {
                         ctx.drawImage(img, 0, 0);
 
-                        let targetQRWidth = img.width * 0.08;
-                        if (targetQRWidth < 80) targetQRWidth = 80;
-                        if (targetQRWidth > img.width / 3) targetQRWidth = img.width / 3;
+                        let targetQRWidth = img.width * 0.02;
+                        if (targetQRWidth < 20) targetQRWidth = 20;
+                        if (targetQRWidth > img.width / 5) targetQRWidth = img.width / 5;
 
                         const scale = targetQRWidth / compositeCanvas.width;
                         const targetQRHeight = compositeCanvas.height * scale;
