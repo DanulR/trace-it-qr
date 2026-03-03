@@ -83,9 +83,9 @@ export default function Dashboard() {
                     if (ctx) {
                         ctx.drawImage(img, 0, 0);
 
-                        let targetQRWidth = img.width * 0.02;
-                        if (targetQRWidth < 20) targetQRWidth = 20;
-                        if (targetQRWidth > img.width / 5) targetQRWidth = img.width / 5;
+                        let targetQRWidth = img.width * 0.04;
+                        if (targetQRWidth < 40) targetQRWidth = 40;
+                        if (targetQRWidth > img.width / 4) targetQRWidth = img.width / 4;
 
                         const scale = targetQRWidth / compositeCanvas.width;
                         const targetQRHeight = compositeCanvas.height * scale;
