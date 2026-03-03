@@ -39,60 +39,43 @@ export function createQRCompositeCanvas(qrCanvas: HTMLCanvasElement, styleObj: Q
         const borderY = padding - borderPadding;
         const borderW = qrCanvas.width + (borderPadding * 2);
 
+        // Draw border with flat bottom when label is present
         ctx.beginPath();
         ctx.moveTo(borderX + borderRadius, borderY);
         ctx.lineTo(borderX + borderW - borderRadius, borderY);
         ctx.quadraticCurveTo(borderX + borderW, borderY, borderX + borderW, borderY + borderRadius);
-        ctx.lineTo(borderX + borderW, borderY + borderH - borderRadius);
-        ctx.quadraticCurveTo(borderX + borderW, borderY + borderH, borderX + borderW - borderRadius, borderY + borderH);
-        ctx.lineTo(borderX + borderRadius, borderY + borderH);
-        ctx.quadraticCurveTo(borderX, borderY + borderH, borderX, borderY + borderH - borderRadius);
+        ctx.lineTo(borderX + borderW, borderY + borderH);
+        ctx.lineTo(borderX, borderY + borderH);
         ctx.lineTo(borderX, borderY + borderRadius);
         ctx.quadraticCurveTo(borderX, borderY, borderX + borderRadius, borderY);
         ctx.closePath();
         ctx.stroke();
 
-        const centerX = finalCanvas.width / 2;
-        const labelY = borderY + borderH + spaceBetweenBorderAndLabel;
-
-        ctx.font = `bold ${labelFontSize}px sans-serif`;
-        const textMetrics = ctx.measureText(styleObj.labelText);
-        const textWidth = textMetrics.width;
-        const boxPaddingX = 60;
-
-        const boxWidth = textWidth + (boxPaddingX * 2);
+        // Label bar spanning full border width, flush underneath
+        const labelY = borderY + borderH + (borderThickness / 2);
+        const labelX = borderX - (borderThickness / 2);
+        const labelW = borderW + borderThickness;
         const boxHeight = labelBoxHeight;
 
         ctx.fillStyle = brandColor;
-        const radius = 40;
-        const x = centerX - (boxWidth / 2);
-        const y = labelY;
-
         ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + boxWidth - radius, y);
-        ctx.quadraticCurveTo(x + boxWidth, y, x + boxWidth, y + radius);
-        ctx.lineTo(x + boxWidth, y + boxHeight - radius);
-        ctx.quadraticCurveTo(x + boxWidth, y + boxHeight, x + boxWidth - radius, y + boxHeight);
-        ctx.lineTo(x + radius, y + boxHeight);
-        ctx.quadraticCurveTo(x, y + boxHeight, x, y + boxHeight - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.moveTo(labelX, labelY);
+        ctx.lineTo(labelX + labelW, labelY);
+        ctx.lineTo(labelX + labelW, labelY + boxHeight - borderRadius);
+        ctx.quadraticCurveTo(labelX + labelW, labelY + boxHeight, labelX + labelW - borderRadius, labelY + boxHeight);
+        ctx.lineTo(labelX + borderRadius, labelY + boxHeight);
+        ctx.quadraticCurveTo(labelX, labelY + boxHeight, labelX, labelY + boxHeight - borderRadius);
+        ctx.lineTo(labelX, labelY);
         ctx.closePath();
         ctx.fill();
 
-        const pointerWidth = 60;
-        ctx.beginPath();
-        ctx.moveTo(centerX - (pointerWidth / 2), y + 2);
-        ctx.lineTo(centerX, borderY + borderH - (borderThickness / 2) + 2);
-        ctx.lineTo(centerX + (pointerWidth / 2), y + 2);
-        ctx.closePath();
-        ctx.fill();
-
+        // Label text
+        const centerX = finalCanvas.width / 2;
         ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${labelFontSize}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(styleObj.labelText, centerX, y + (boxHeight / 2) + 4);
+        ctx.fillText(styleObj.labelText, centerX, labelY + (boxHeight / 2) + 4);
     }
 
     return finalCanvas;
