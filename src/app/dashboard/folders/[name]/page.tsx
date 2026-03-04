@@ -14,6 +14,7 @@ import { QRCodeCard } from '@/components/QRCodeCard';
 import { QRCodeData, Folder } from '@/lib/db';
 import { QRCodePreview, QRStyle } from '@/components/QRCodePreview';
 import { createQRCompositeCanvas } from '@/lib/qr-canvas';
+import { createClient } from '@/lib/supabase/client';
 
 // Duplicate basic types if needed or import
 export default function FolderViewPage({ params }: { params: Promise<{ name: string }> }) {
@@ -22,17 +23,31 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
     const [loading, setLoading] = useState(true);
     const [downloadItem, setDownloadItem] = useState<{ item: QRCodeData, style: QRStyle } | null>(null);
     const [embedItem, setEmbedItem] = useState<{ item: QRCodeData, style: QRStyle, file: File } | null>(null);
+    const [userStyle, setUserStyle] = useState<Partial<QRStyle> | null>(null);
     // State to hold the unwrapped param
     const [folderName, setFolderName] = useState<string>('');
     const router = useRouter();
+    const supabase = createClient();
 
     useEffect(() => {
+        // Load user metadata style
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user?.user_metadata?.style) {
+                const s = { ...user.user_metadata.style };
+                if (s.cornerStyle === 'rounded') {
+                    s.eyeRadius = [10, 10, 10, 10];
+                } else if (s.cornerStyle === 'square') {
+                    s.eyeRadius = [0, 0, 0, 0];
+                }
+                setUserStyle(s);
+            }
+        });
+
         // Unwrap params
         params.then(p => {
             const name = decodeURIComponent(p.name);
             setFolderName(name);
 
-            // Move fetch logic here or use another effect dependent on folderName
             Promise.all([
                 fetch('/api/qr').then(res => res.json()),
                 fetch('/api/folders').then(res => res.json())
@@ -152,6 +167,9 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
         if (item.style) {
             try { style = JSON.parse(item.style); } catch (e) { console.error("Failed to parse style", e); }
         }
+        if (userStyle) {
+            style = { ...style, ...userStyle };
+        }
         setDownloadItem({ item, style });
     };
 
@@ -165,6 +183,9 @@ export default function FolderViewPage({ params }: { params: Promise<{ name: str
         };
         if (item.style) {
             try { style = JSON.parse(item.style); } catch (e) { console.error("Failed to parse style", e); }
+        }
+        if (userStyle) {
+            style = { ...style, ...userStyle };
         }
         setEmbedItem({ item, style, file });
     };
