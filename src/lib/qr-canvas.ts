@@ -4,6 +4,7 @@ export interface QRStyle {
     logoImage?: string;
     eyeRadius?: [number, number, number, number];
     labelText?: string;
+    borderColor?: string;
 }
 
 export function createQRCompositeCanvas(qrCanvas: HTMLCanvasElement, styleObj: QRStyle, padding: number = 100): HTMLCanvasElement {
@@ -11,17 +12,16 @@ export function createQRCompositeCanvas(qrCanvas: HTMLCanvasElement, styleObj: Q
     const ctx = finalCanvas.getContext('2d');
     if (!ctx) return finalCanvas;
 
-    const labelFontSize = 96;
-    const boxPaddingY = 40;
+    const labelFontSize = Math.round(qrCanvas.width * 0.22);
+    const boxPaddingY = Math.round(qrCanvas.width * 0.06);
     const labelBoxHeight = labelFontSize + (boxPaddingY * 2);
-    const brandColor = '#8B0000';
+    const brandColor = styleObj.borderColor || '#8B0000';
     const borderPadding = 20;
     const borderRadius = 40;
     const borderThickness = 12;
-    const spaceBetweenBorderAndLabel = 30;
 
     const borderH = qrCanvas.height + (borderPadding * 2);
-    const totalContentHeight = (padding - borderPadding) + borderH + spaceBetweenBorderAndLabel + labelBoxHeight + 40;
+    const totalContentHeight = (padding - borderPadding) + borderH + (borderThickness / 2) + labelBoxHeight + 40;
 
     finalCanvas.width = qrCanvas.width + (padding * 2);
     finalCanvas.height = styleObj.labelText
