@@ -63,7 +63,7 @@ export const QRCodePreview: React.FC<QRCodePreviewProps> = ({ value, style, size
                 <div style={{
                     backgroundColor: style.borderColor || '#8B0000',
                     color: 'white',
-                    padding: `${size * 0.06}px 0`,
+                    padding: `${size * 0.03}px 0`,
                     borderRadius: style.eyeRadius[0] > 0 ? '0 0 30px 30px' : '0',
                     fontWeight: 'bold',
                     fontSize: `${size * 0.22}px`,
