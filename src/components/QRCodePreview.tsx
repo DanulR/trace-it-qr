@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { QRCode } from 'react-qrcode-logo';
 
@@ -60,10 +61,10 @@ export const QRCodePreview: React.FC<QRCodePreviewProps> = ({ value, style, size
                 <div style={{
                     backgroundColor: style.borderColor || '#8B0000',
                     color: 'white',
-                    padding: '16px 0',
+                    padding: `${size * 0.06}px 0`,
                     borderRadius: '0 0 30px 30px',
                     fontWeight: 'bold',
-                    fontSize: '56px',
+                    fontSize: `${size * 0.22}px`,
                     fontFamily: 'sans-serif',
                     textAlign: 'center' as const,
                     alignSelf: 'stretch',
