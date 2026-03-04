@@ -33,7 +33,9 @@ export const QRCodePreview: React.FC<QRCodePreviewProps> = ({ value, style, size
             {/* Wrapper for Border */}
             <div style={{
                 border: `8px solid ${style.borderColor || '#8B0000'}`,
-                borderRadius: style.labelText ? '30px 30px 0 0' : '30px',
+                borderRadius: style.eyeRadius[0] > 0
+                    ? (style.labelText ? '30px 30px 0 0' : '30px')
+                    : (style.labelText ? '0' : '0'),
                 borderBottom: style.labelText ? 'none' : `8px solid ${style.borderColor || '#8B0000'}`,
                 padding: '15px',
                 display: 'flex',
@@ -62,7 +64,7 @@ export const QRCodePreview: React.FC<QRCodePreviewProps> = ({ value, style, size
                     backgroundColor: style.borderColor || '#8B0000',
                     color: 'white',
                     padding: `${size * 0.06}px 0`,
-                    borderRadius: '0 0 30px 30px',
+                    borderRadius: style.eyeRadius[0] > 0 ? '0 0 30px 30px' : '0',
                     fontWeight: 'bold',
                     fontSize: `${size * 0.22}px`,
                     fontFamily: 'sans-serif',
