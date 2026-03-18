@@ -64,7 +64,7 @@ export const QRCodePreview: React.FC<QRCodePreviewProps> = ({ value, style, size
                     padding: `${size * 0.02}px ${size * 0.12}px`,
                     borderRadius: '999px',
                     fontWeight: 'bold',
-                    fontSize: `${size * 0.1}px`,
+                    fontSize: `${size * 0.16}px`,
                     fontFamily: 'sans-serif',
                     textAlign: 'center' as const,
                     marginTop: `${size * 0.03}px`,

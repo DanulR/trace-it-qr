@@ -12,7 +12,7 @@ export function createQRCompositeCanvas(qrCanvas: HTMLCanvasElement, styleObj: Q
     const ctx = finalCanvas.getContext('2d');
     if (!ctx) return finalCanvas;
 
-    const labelFontSize = Math.round(qrCanvas.width * 0.1);
+    const labelFontSize = Math.round(qrCanvas.width * 0.16);
     const pillPaddingX = Math.round(qrCanvas.width * 0.12);
     const pillPaddingY = Math.round(qrCanvas.width * 0.02);
     const labelBoxHeight = labelFontSize + (pillPaddingY * 2);
