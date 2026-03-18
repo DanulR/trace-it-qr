@@ -12,9 +12,10 @@ export function createQRCompositeCanvas(qrCanvas: HTMLCanvasElement, styleObj: Q
     const ctx = finalCanvas.getContext('2d');
     if (!ctx) return finalCanvas;
 
-    const labelFontSize = Math.round(qrCanvas.width * 0.22);
-    const boxPaddingY = Math.round(qrCanvas.width * 0.03);
-    const labelBoxHeight = labelFontSize + (boxPaddingY * 2);
+    const labelFontSize = Math.round(qrCanvas.width * 0.1);
+    const pillPaddingX = Math.round(qrCanvas.width * 0.12);
+    const pillPaddingY = Math.round(qrCanvas.width * 0.02);
+    const labelBoxHeight = labelFontSize + (pillPaddingY * 2);
     const brandColor = styleObj.borderColor || '#8B0000';
     const borderPadding = 20;
     const isRounded = styleObj.eyeRadius && styleObj.eyeRadius[0] > 0;
@@ -22,7 +23,8 @@ export function createQRCompositeCanvas(qrCanvas: HTMLCanvasElement, styleObj: Q
     const borderThickness = 12;
 
     const borderH = qrCanvas.height + (borderPadding * 2);
-    const totalContentHeight = (padding - borderPadding) + borderH + (borderThickness / 2) + labelBoxHeight + 40;
+    const labelGap = Math.round(qrCanvas.width * 0.03);
+    const totalContentHeight = (padding - borderPadding) + borderH + (borderThickness / 2) + labelGap + labelBoxHeight + 40;
 
     finalCanvas.width = qrCanvas.width + (padding * 2);
     finalCanvas.height = styleObj.labelText
@@ -40,43 +42,49 @@ export function createQRCompositeCanvas(qrCanvas: HTMLCanvasElement, styleObj: Q
         const borderY = padding - borderPadding;
         const borderW = qrCanvas.width + (borderPadding * 2);
 
-        // Draw border with flat bottom when label is present
+        // Draw full rounded border
         ctx.beginPath();
         ctx.moveTo(borderX + borderRadius, borderY);
         ctx.lineTo(borderX + borderW - borderRadius, borderY);
         ctx.quadraticCurveTo(borderX + borderW, borderY, borderX + borderW, borderY + borderRadius);
-        ctx.lineTo(borderX + borderW, borderY + borderH);
-        ctx.lineTo(borderX, borderY + borderH);
+        ctx.lineTo(borderX + borderW, borderY + borderH - borderRadius);
+        ctx.quadraticCurveTo(borderX + borderW, borderY + borderH, borderX + borderW - borderRadius, borderY + borderH);
+        ctx.lineTo(borderX + borderRadius, borderY + borderH);
+        ctx.quadraticCurveTo(borderX, borderY + borderH, borderX, borderY + borderH - borderRadius);
         ctx.lineTo(borderX, borderY + borderRadius);
         ctx.quadraticCurveTo(borderX, borderY, borderX + borderRadius, borderY);
         ctx.closePath();
         ctx.stroke();
 
-        // Label bar spanning full border width, flush underneath
-        const labelY = borderY + borderH + (borderThickness / 2);
-        const labelX = borderX - (borderThickness / 2);
-        const labelW = borderW + borderThickness;
-        const boxHeight = labelBoxHeight;
+        // Centered pill-shaped label below border
+        const centerX = finalCanvas.width / 2;
+        const labelY = borderY + borderH + (borderThickness / 2) + labelGap;
+
+        // Measure text to size the pill
+        ctx.font = `bold ${labelFontSize}px sans-serif`;
+        const textWidth = ctx.measureText(styleObj.labelText).width;
+        const pillW = textWidth + (pillPaddingX * 2);
+        const pillH = labelBoxHeight;
+        const pillX = centerX - (pillW / 2);
+        const pillRadius = pillH / 2; // Full pill shape
 
         ctx.fillStyle = brandColor;
         ctx.beginPath();
-        ctx.moveTo(labelX, labelY);
-        ctx.lineTo(labelX + labelW, labelY);
-        ctx.lineTo(labelX + labelW, labelY + boxHeight - borderRadius);
-        ctx.quadraticCurveTo(labelX + labelW, labelY + boxHeight, labelX + labelW - borderRadius, labelY + boxHeight);
-        ctx.lineTo(labelX + borderRadius, labelY + boxHeight);
-        ctx.quadraticCurveTo(labelX, labelY + boxHeight, labelX, labelY + boxHeight - borderRadius);
-        ctx.lineTo(labelX, labelY);
+        ctx.moveTo(pillX + pillRadius, labelY);
+        ctx.lineTo(pillX + pillW - pillRadius, labelY);
+        ctx.quadraticCurveTo(pillX + pillW, labelY, pillX + pillW, labelY + pillRadius);
+        ctx.quadraticCurveTo(pillX + pillW, labelY + pillH, pillX + pillW - pillRadius, labelY + pillH);
+        ctx.lineTo(pillX + pillRadius, labelY + pillH);
+        ctx.quadraticCurveTo(pillX, labelY + pillH, pillX, labelY + pillRadius);
+        ctx.quadraticCurveTo(pillX, labelY, pillX + pillRadius, labelY);
         ctx.closePath();
         ctx.fill();
 
         // Label text
-        const centerX = finalCanvas.width / 2;
         ctx.fillStyle = '#ffffff';
-        ctx.font = `bold ${labelFontSize}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(styleObj.labelText, centerX, labelY + (boxHeight / 2) + 4);
+        ctx.fillText(styleObj.labelText, centerX, labelY + (pillH / 2));
     }
 
     return finalCanvas;
