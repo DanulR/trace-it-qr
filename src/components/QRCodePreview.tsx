@@ -19,6 +19,9 @@ interface QRCodePreviewProps {
 }
 
 export const QRCodePreview: React.FC<QRCodePreviewProps> = ({ value, style, size = 250, id = 'qr-preview' }) => {
+    // Automatically convert the old maroon to the newer darker maroon, or use the exact configured color
+    const brandColor = style.borderColor === '#8B0000' || !style.borderColor ? '#600000' : style.borderColor;
+
     return (
         <div style={{
             display: 'flex',
@@ -32,7 +35,7 @@ export const QRCodePreview: React.FC<QRCodePreviewProps> = ({ value, style, size
         }}>
             {/* Wrapper for Border */}
             <div style={{
-                border: `8px solid ${style.borderColor || '#8B0000'}`,
+                border: `8px solid ${brandColor}`,
                 borderRadius: style.eyeRadius[0] > 0 ? '30px' : '0',
                 padding: '15px',
                 display: 'flex',
@@ -48,6 +51,7 @@ export const QRCodePreview: React.FC<QRCodePreviewProps> = ({ value, style, size
                     logoWidth={size * 0.22}
                     logoHeight={size * 0.22}
                     eyeRadius={style.eyeRadius}
+                    eyeColor={brandColor}
                     removeQrCodeBehindLogo={true}
                     logoPadding={0}
                     qrStyle="squares"
@@ -59,7 +63,7 @@ export const QRCodePreview: React.FC<QRCodePreviewProps> = ({ value, style, size
 
             {style.labelText && (
                 <div style={{
-                    backgroundColor: '#600000',
+                    backgroundColor: brandColor,
                     color: 'white',
                     padding: `${size * 0.04}px 0`,
                     borderRadius: '0 0 20px 20px',

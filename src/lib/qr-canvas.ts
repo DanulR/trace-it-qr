@@ -15,7 +15,7 @@ export function createQRCompositeCanvas(qrCanvas: HTMLCanvasElement, styleObj: Q
     const labelFontSize = Math.round(qrCanvas.width * 0.22);
     const boxPaddingY = Math.round(qrCanvas.width * 0.04);
     const labelBoxHeight = labelFontSize + (boxPaddingY * 2);
-    const brandColor = styleObj.borderColor || '#8B0000';
+    const brandColor = styleObj.borderColor === '#8B0000' || !styleObj.borderColor ? '#600000' : styleObj.borderColor;
     const borderPadding = 20;
     const isRounded = styleObj.eyeRadius && styleObj.eyeRadius[0] > 0;
     const borderRadius = isRounded ? 40 : 0;
@@ -63,7 +63,7 @@ export function createQRCompositeCanvas(qrCanvas: HTMLCanvasElement, styleObj: Q
         const labelW = borderW + borderThickness;
         const boxHeight = labelBoxHeight;
 
-        ctx.fillStyle = '#600000';
+        ctx.fillStyle = brandColor;
         ctx.beginPath();
         ctx.moveTo(labelX, labelY);
         ctx.lineTo(labelX + labelW, labelY);
