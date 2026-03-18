@@ -79,81 +79,105 @@ export default function Dashboard() {
     useEffect(() => {
         if (!embedItem) return;
 
-        const timer = setTimeout(() => {
+        // Poll until QR canvas is ready with logo
+        const maxAttempts = 15; // 15 * 200ms = 3 seconds max
+        let attempt = 0;
+
+        const poll = setInterval(() => {
+            attempt++;
             const qrCanvas = document.getElementById('qr-embed-canvas') as HTMLCanvasElement;
-            if (qrCanvas) {
-                let styleObj: QRStyle;
-                if (embedItem.style) {
-                    styleObj = typeof embedItem.style === 'string' ? JSON.parse(embedItem.style) : embedItem.style as any;
-                } else {
-                    styleObj = { labelText: '', fgColor: '#000', bgColor: '#fff', eyeRadius: [0, 0, 0, 0], logoImage: '' };
-                }
 
-                const compositeCanvas = createQRCompositeCanvas(qrCanvas, styleObj, 40);
-
-                const img = new Image();
-                img.onload = () => {
-                    const finalCanvas = document.createElement('canvas');
-                    finalCanvas.width = img.width;
-                    finalCanvas.height = img.height;
-                    const ctx = finalCanvas.getContext('2d');
-                    if (ctx) {
-                        ctx.drawImage(img, 0, 0);
-
-                        let targetQRWidth = img.width * 0.07;
-                        if (targetQRWidth < 70) targetQRWidth = 70;
-                        if (targetQRWidth > img.width / 4) targetQRWidth = img.width / 4;
-
-                        const scale = targetQRWidth / compositeCanvas.width;
-                        const targetQRHeight = compositeCanvas.height * scale;
-
-                        const padding = targetQRWidth * 0.1;
-                        const x = img.width - targetQRWidth - padding;
-                        const y = img.height - targetQRHeight - padding;
-
-                        // Step-down scale for high quality
-                        let scaledQR: HTMLCanvasElement = compositeCanvas;
-                        while (scaledQR.width > targetQRWidth * 2) {
-                            const stepCanvas = document.createElement('canvas');
-                            stepCanvas.width = Math.round(scaledQR.width / 2);
-                            stepCanvas.height = Math.round(scaledQR.height / 2);
-                            const stepCtx = stepCanvas.getContext('2d');
-                            if (stepCtx) {
-                                stepCtx.imageSmoothingEnabled = true;
-                                stepCtx.imageSmoothingQuality = 'high';
-                                stepCtx.drawImage(scaledQR, 0, 0, stepCanvas.width, stepCanvas.height);
-                            }
-                            scaledQR = stepCanvas;
-                        }
-
-                        // Final draw with shadow
-                        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-                        ctx.shadowBlur = 10;
-                        ctx.shadowOffsetX = 0;
-                        ctx.shadowOffsetY = 4;
-                        ctx.imageSmoothingEnabled = true;
-                        ctx.imageSmoothingQuality = 'high';
-
-                        ctx.drawImage(scaledQR, x, y, targetQRWidth, targetQRHeight);
-
-                        const link = document.createElement('a');
-                        const ext = embedItem.file.name.split('.').pop() || 'png';
-                        link.download = `${embedItem.item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_infographic.${ext}`;
-                        link.href = finalCanvas.toDataURL(`image/${ext === 'jpg' ? 'jpeg' : 'png'}`);
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    }
-                    URL.revokeObjectURL(img.src);
+            if (!qrCanvas) {
+                if (attempt >= maxAttempts) {
+                    clearInterval(poll);
                     setEmbedItem(null);
-                };
-                img.src = URL.createObjectURL(embedItem.file);
-            } else {
-                setEmbedItem(null);
+                }
+                return;
             }
-        }, 500);
 
-        return () => clearTimeout(timer);
+            // Check if logo has rendered by sampling center pixel
+            const ctx2 = qrCanvas.getContext('2d');
+            if (ctx2 && embedItem.style.logoImage) {
+                const cx = Math.floor(qrCanvas.width / 2);
+                const cy = Math.floor(qrCanvas.height / 2);
+                const pixel = ctx2.getImageData(cx, cy, 1, 1).data;
+                // If center is still white (255,255,255), logo hasn't loaded yet
+                if (pixel[0] === 255 && pixel[1] === 255 && pixel[2] === 255 && attempt < maxAttempts) {
+                    return; // Keep polling
+                }
+            }
+
+            clearInterval(poll);
+
+            let styleObj: QRStyle;
+            if (embedItem.style) {
+                styleObj = typeof embedItem.style === 'string' ? JSON.parse(embedItem.style) : embedItem.style as any;
+            } else {
+                styleObj = { labelText: '', fgColor: '#000', bgColor: '#fff', eyeRadius: [0, 0, 0, 0], logoImage: '' };
+            }
+
+            const compositeCanvas = createQRCompositeCanvas(qrCanvas, styleObj, 40);
+
+            const img = new Image();
+            img.onload = () => {
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = img.width;
+                finalCanvas.height = img.height;
+                const ctx = finalCanvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0);
+
+                    let targetQRWidth = img.width * 0.07;
+                    if (targetQRWidth < 70) targetQRWidth = 70;
+                    if (targetQRWidth > img.width / 4) targetQRWidth = img.width / 4;
+
+                    const scale = targetQRWidth / compositeCanvas.width;
+                    const targetQRHeight = compositeCanvas.height * scale;
+
+                    const padding = targetQRWidth * 0.1;
+                    const x = img.width - targetQRWidth - padding;
+                    const y = img.height - targetQRHeight - padding;
+
+                    // Step-down scale for high quality
+                    let scaledQR: HTMLCanvasElement = compositeCanvas;
+                    while (scaledQR.width > targetQRWidth * 2) {
+                        const stepCanvas = document.createElement('canvas');
+                        stepCanvas.width = Math.round(scaledQR.width / 2);
+                        stepCanvas.height = Math.round(scaledQR.height / 2);
+                        const stepCtx = stepCanvas.getContext('2d');
+                        if (stepCtx) {
+                            stepCtx.imageSmoothingEnabled = true;
+                            stepCtx.imageSmoothingQuality = 'high';
+                            stepCtx.drawImage(scaledQR, 0, 0, stepCanvas.width, stepCanvas.height);
+                        }
+                        scaledQR = stepCanvas;
+                    }
+
+                    // Final draw with shadow
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 4;
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+
+                    ctx.drawImage(scaledQR, x, y, targetQRWidth, targetQRHeight);
+
+                    const link = document.createElement('a');
+                    const ext = embedItem.file.name.split('.').pop() || 'png';
+                    link.download = `${embedItem.item.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_infographic.${ext}`;
+                    link.href = finalCanvas.toDataURL(`image/${ext === 'jpg' ? 'jpeg' : 'png'}`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+                URL.revokeObjectURL(img.src);
+                setEmbedItem(null);
+            };
+            img.src = URL.createObjectURL(embedItem.file);
+        }, 200);
+
+        return () => clearInterval(poll);
     }, [embedItem]);
 
     const prepareDownload = (item: QRCodeData) => {
