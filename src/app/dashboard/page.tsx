@@ -285,7 +285,7 @@ export default function Dashboard() {
                         id="qr-embed-canvas"
                         value={getUrl(embedItem.item)}
                         style={embedItem.style}
-                        size={250} // Render close to target embed size to avoid quality loss from downscaling
+                        size={500} // Balanced size: logo visible + minimal scaling
                     />
                 )}
             </div>
