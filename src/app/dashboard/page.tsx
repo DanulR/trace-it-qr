@@ -111,13 +111,30 @@ export default function Dashboard() {
                         const x = img.width - targetQRWidth - padding;
                         const y = img.height - targetQRHeight - padding;
 
-                        // We can add a drop shadow to the QR composite on the image
+                        // Step-down scale for high quality
+                        let scaledQR: HTMLCanvasElement = compositeCanvas;
+                        while (scaledQR.width > targetQRWidth * 2) {
+                            const stepCanvas = document.createElement('canvas');
+                            stepCanvas.width = Math.round(scaledQR.width / 2);
+                            stepCanvas.height = Math.round(scaledQR.height / 2);
+                            const stepCtx = stepCanvas.getContext('2d');
+                            if (stepCtx) {
+                                stepCtx.imageSmoothingEnabled = true;
+                                stepCtx.imageSmoothingQuality = 'high';
+                                stepCtx.drawImage(scaledQR, 0, 0, stepCanvas.width, stepCanvas.height);
+                            }
+                            scaledQR = stepCanvas;
+                        }
+
+                        // Final draw with shadow
                         ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
                         ctx.shadowBlur = 10;
                         ctx.shadowOffsetX = 0;
                         ctx.shadowOffsetY = 4;
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
 
-                        ctx.drawImage(compositeCanvas, x, y, targetQRWidth, targetQRHeight);
+                        ctx.drawImage(scaledQR, x, y, targetQRWidth, targetQRHeight);
 
                         const link = document.createElement('a');
                         const ext = embedItem.file.name.split('.').pop() || 'png';
