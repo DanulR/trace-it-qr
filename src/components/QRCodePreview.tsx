@@ -61,13 +61,14 @@ export const QRCodePreview: React.FC<QRCodePreviewProps> = ({ value, style, size
                 <div style={{
                     backgroundColor: style.borderColor || '#8B0000',
                     color: 'white',
-                    padding: `${size * 0.02}px ${size * 0.12}px`,
-                    borderRadius: '999px',
+                    padding: `${size * 0.03}px 0`,
+                    borderRadius: '0 0 20px 20px',
                     fontWeight: 'bold',
-                    fontSize: `${size * 0.16}px`,
+                    fontSize: `${size * 0.18}px`,
                     fontFamily: 'sans-serif',
                     textAlign: 'center' as const,
-                    marginTop: `${size * 0.03}px`,
+                    alignSelf: 'stretch',
+                    marginTop: `${size * 0.02}px`,
                     letterSpacing: '1px'
                 }}>
                     {style.labelText}
