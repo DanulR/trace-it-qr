@@ -16,15 +16,18 @@ export async function middleware(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) =>
+                    cookiesToSet.forEach(({ name, value, options }) => {
+                        // Ensure cookies are shared across all trace-it.io subdomains
+                        const domainOption = process.env.NODE_ENV === 'production' ? { domain: '.trace-it.io' } : {};
                         request.cookies.set(name, value)
-                    )
+                    })
                     supabaseResponse = NextResponse.next({
                         request,
                     })
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        supabaseResponse.cookies.set(name, value, options)
-                    )
+                    cookiesToSet.forEach(({ name, value, options }) => {
+                        const domainOption = process.env.NODE_ENV === 'production' ? { domain: '.trace-it.io' } : {};
+                        supabaseResponse.cookies.set(name, value, { ...options, ...domainOption })
+                    })
                 },
             },
         }
@@ -38,31 +41,63 @@ export async function middleware(request: NextRequest) {
     // 2. Subdomain Handling
     const url = request.nextUrl
     const hostname = request.headers.get("host") || "";
-    const searchParams = request.nextUrl.searchParams.toString();
 
     // Clean hostname (remove port)
     const domain = hostname.split(':')[0];
-
-    // Define root domains (localhost, vercel.app, or your custom domain)
-    // In production, this should be env var. For now assuming 'trace-it.io' or generic.
-    // We can detect if it's a subdomain by checking part count or env var.
-
-    const isLocalhost = domain.includes("localhost");
     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'trace-it.io';
+    const isLocalhost = domain.includes("localhost");
 
-    // If we are on a custom subdomain (e.g. user.trace-it.io)
-    // We rewrite to a dynamic route like /_sites/[subdomain]
-    // BUT: The user asked for "different subdomains for each user".
-    // This usually implies serving content (redirection logic) or a branded dashboard.
-    // Assuming for now it's for REDIRECTION/LINK handling.
+    if (!isLocalhost && url.pathname.startsWith('/dashboard')) {
+        if (!user) {
+            // Unauthenticated users trying to access ANY dashboard get sent to login
+            const loginUrl = request.nextUrl.clone()
+            loginUrl.hostname = `qr.${rootDomain}`
+            loginUrl.pathname = '/login'
+            return NextResponse.redirect(loginUrl)
+        }
 
-    // If the user wants a branded DASHBOARD on their subdomain, we need to rewrite dashboard routes.
-    // For now, let's just secure the /dashboard route for main domain.
+        const userSubdomain = user.user_metadata?.subdomain;
 
-    if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-        const loginUrl = request.nextUrl.clone()
-        loginUrl.pathname = '/login'
-        return NextResponse.redirect(loginUrl)
+        // If they are on the main qr.trace-it.io and try to go to dashboard, redirect to their subdomain
+        if (domain === `qr.${rootDomain}`) {
+            if (userSubdomain) {
+                const newUrl = request.nextUrl.clone()
+                newUrl.hostname = `${userSubdomain}.${rootDomain}`
+                return NextResponse.redirect(newUrl)
+            } else {
+                // User has no subdomain assigned yet. They can't access dashboard.
+                // You could redirect them to an error page or a setup page.
+                // For now, let's keep them on qr.trace-it.io but maybe redirect to a generic page or home
+            }
+        }
+        // If they are on a specific subdomain (e.g. acmeco.trace-it.io)
+        else if (domain.endsWith(`.${rootDomain}`) && domain !== `qr.${rootDomain}` && domain !== `www.${rootDomain}`) {
+            const currentSubdomain = domain.replace(`.${rootDomain}`, '');
+
+            // Check if this subdomain matches their assigned subdomain
+            if (currentSubdomain !== userSubdomain) {
+                // Unauthorized for this subdomain. Send them to their own, or login if none
+                if (userSubdomain) {
+                    const newUrl = request.nextUrl.clone()
+                    newUrl.hostname = `${userSubdomain}.${rootDomain}`
+                    return NextResponse.redirect(newUrl)
+                } else {
+                    const loginUrl = request.nextUrl.clone()
+                    loginUrl.hostname = `qr.${rootDomain}`
+                    loginUrl.pathname = '/login'
+                    return NextResponse.redirect(loginUrl)
+                }
+            }
+        }
+    }
+
+    // Protect login/landing (only accessible via qr.trace-it.io or roots)
+    if (!isLocalhost && (url.pathname === '/login' || url.pathname === '/')) {
+        if (domain !== `qr.${rootDomain}` && domain !== rootDomain && domain !== `www.${rootDomain}`) {
+            const newUrl = request.nextUrl.clone()
+            newUrl.hostname = `qr.${rootDomain}`
+            return NextResponse.redirect(newUrl)
+        }
     }
 
     return supabaseResponse
